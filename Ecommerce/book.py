@@ -21,20 +21,22 @@ with app.app_context():
 
         books = [
             Product(
-                name="Python Crash Course",
-                author = "Eric Matthes",
-                description="Learn Python from scratch",
+                name="To Kill a Mockingbird",
+                author = "Harper Lee",
+                description="A powerful story exploring justice, morality, and racial inequality in the American South",
                 price=699,
                 stock=20,
+                image_file = "mocking_bird.jpg",
                 category_id=programming.id
             ),
 
             Product(
-                name="Clean Code",
-                author = "Robert C.Martin",
-                description="Best practices for programmers",
+                name="The Silent Patient",
+                author = "Alex Michaelides",
+                description=" by Alex Michaelides: A gripping psychological thriller about a famous painter who shoots her husband and never speaks another word.",
                 price=899,
                 stock=15,
+                image_file = "silent.jpeg",
                 category_id=programming.id
             ),
 
@@ -44,6 +46,7 @@ with app.app_context():
                 description="Build better habits",
                 price=499,
                 stock=25,
+                image_file = "atomic.jpg",
                 category_id=self_help.id
             ),
 
@@ -53,6 +56,7 @@ with app.app_context():
                 description="Popular fiction novel",
                 price=299,
                 stock=30,
+                image_file = "alchemist.jpg",
                 category_id=fiction.id
             )
         ]
