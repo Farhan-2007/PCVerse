@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Book Store</title>
+</head>
+
+<body>
+
+    <h1>Books Available</h1>
+
+    {% for book in books %}
+
+    <h2>
+        <a href="{{ url_for('main.book', book_id=book.id) }}">
+            {{ book.name }}
+        </a>
+    </h2>
+
+    <p>{{ book.description }}</p>
+
+    <p>₹{{ book.price }}</p>
+
+    {% if book.stock > 0 %}
+    <p>In Stock ({{ book.stock }})</p>
+    {% else %}
+    <p>Out of Stock</p>
+    {% endif %}
+
+    <hr>
+
+    {% endfor %}
+
+</body>
+
+</html>
