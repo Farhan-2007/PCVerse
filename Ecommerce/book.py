@@ -27,7 +27,7 @@ with app.app_context():
                 price=699,
                 stock=20,
                 image_file = "mocking_bird.jpg",
-                category_id=programming.id
+                category_id=fiction.id
             ),
 
             Product(
@@ -37,7 +37,7 @@ with app.app_context():
                 price=899,
                 stock=15,
                 image_file = "silent.jpeg",
-                category_id=programming.id
+                category_id= fiction.id
             ),
 
             Product(
