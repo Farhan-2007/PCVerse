@@ -1,15 +1,23 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
 
-<head>
-    <title>Book Store</title>
-</head>
+{% block content %}
 
-<body>
+<h2>
+    {% for category in categories %}
+        <a href="{{ url_for('main.category_books', category_id=category.id) }}">
+            {{ category.name }}
+        </a>
+        <br>
+    {% endfor %}
+</h2>
 
-    <h1>Books Available</h1>
+<h1>Books Available</h1>
 
-    {% for book in books %}
+{% for book in books %}
+
+    <img src="{{ url_for('static', filename='product_pics/' + book.image_file) }}"
+         alt="{{ book.name }}"
+         width="120">
 
     <h2>
         <a href="{{ url_for('main.book', book_id=book.id) }}">
@@ -17,22 +25,20 @@
         </a>
     </h2>
 
-    <p><strong>Category:</strong> {{ book.category.name }}</p>    
+    <p><strong>Category:</strong> {{ book.category.name }}</p>
 
     <p>{{ book.description }}</p>
 
     <p>₹{{ book.price }}</p>
 
     {% if book.stock > 0 %}
-    <p>In Stock ({{ book.stock }})</p>
+        <p>In Stock ({{ book.stock }})</p>
     {% else %}
-    <p>Out of Stock</p>
+        <p>Out of Stock</p>
     {% endif %}
 
     <hr>
 
-    {% endfor %}
+{% endfor %}
 
-</body>
-
-</html>
+{% endblock content %}

@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h1> {{ category.name }} </h1>
+
+    {% for book in books %}
+
+        <h3>
+            <a href="{{ url_for('main.book', book_id = book.id) }}">
+                {{ book.name }}
+            </a>
+        </h3>
+
+        <p>₹{{ book.price }}</p>
+
+    {% endfor %}
+
+{% endblock content %}
