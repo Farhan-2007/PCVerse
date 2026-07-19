@@ -2,19 +2,27 @@
 
 {% block content %}
 
-<h2>Sign Up</h2>
+<h2>Create Account</h2>
 
-<form>
-    <input type="text" placeholder="Username">
-    <br><br>
+<form method="POST">
 
-    <input type="email" placeholder="Email">
-    <br><br>
+    <p>
+        <label>Username</label><br>
+        <input type="text" name="username">
+    </p>
 
-    <input type="password" placeholder="Password">
-    <br><br>
+    <p>
+        <label>Email</label><br>
+        <input type="email" name="email">
+    </p>
+
+    <p>
+        <label>Password</label><br>
+        <input type="password" name="password">
+    </p>
 
     <button type="submit">Sign Up</button>
+
 </form>
 
 {% endblock content %}
