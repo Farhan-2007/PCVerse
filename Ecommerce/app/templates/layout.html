@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Book Store</title>
     <link rel="stylesheet" href="{{ url_for('static', filename = 'style.css') }}">
 </head>
@@ -10,9 +13,25 @@
 
     <nav class="navbar">
 
-        <div class="nav-left">
-            <a href="{{ url_for('main.home') }}">Home</a>
+        <div class="logo">
+            <a href="{{ url_for('main.home')}}">Book Store</a>
         </div>
+
+        <div class="nav-centre">
+
+            <a href="{{ url_for('main.home') }}">Home</a>
+            <a href="#">Categories</a>
+
+        </div>
+
+        <div class="search-box">
+            <from>
+                <input type="Text" placeholder="Search Books...">
+
+                <button type="submit">Search</button>
+            </from>
+        </div>
+
 
         <div class="nav-right">
 
