@@ -4,6 +4,7 @@
 
 <section class="hero">
     <div class="hero-content">
+
         <h1>Discover Your Favorite Books</h1>
 
         <p>
@@ -11,46 +12,11 @@
             bestselling authors, and timeless classics.
         </p>
 
-        <a href="#books" class="hero-btn">Browse Books</a>
+        <a href="{{ url_for('main.books') }}" class="hero-btn">
+            Browse Books
+        </a>
+
     </div>
-
 </section>
-
-<h2>
-    {% for category in categories %}
-    <a href="{{ url_for('main.category_books', category_id=category.id) }}">
-        {{ category.name }}
-    </a>
-    <br>
-    {% endfor %}
-</h2>
-
-<h2 id="books">Books Available</h2>
-
-{% for book in books %}
-
-<img src="{{ url_for('static', filename='product_pics/' + book.image_file) }}" alt="{{ book.name }}" width="120">
-
-<h2>
-    <a href="{{ url_for('main.book', book_id=book.id) }}">
-        {{ book.name }}
-    </a>
-</h2>
-
-<p><strong>Category:</strong> {{ book.category.name }}</p>
-
-<p>{{ book.description }}</p>
-
-<p>₹{{ book.price }}</p>
-
-{% if book.stock > 0 %}
-<p>In Stock ({{ book.stock }})</p>
-{% else %}
-<p>Out of Stock</p>
-{% endif %}
-
-<hr>
-
-{% endfor %}
 
 {% endblock content %}
