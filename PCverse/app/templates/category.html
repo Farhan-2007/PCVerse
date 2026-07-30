@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<section class="books-section">
+
+    <h2 class="section-title"> {{ category.name }} Books </h2>
+
+    <div class="book-grid">
+        {% for book in books %}
+        <div class="book-card">
+            <img src="{{ url_for('static', filename='product_pics/' + book.image_file) }}" alt="{{ book.name }}">
+
+            <h3>{{ book.name }}</h3>
+
+            <p class="author">{{book.author}}</p>
+
+            <p class="price">₹{{book.price}}</p>
+
+            {% if book.stock > 0 %}
+            <p class="stock in-stock">In Stock ({{ book.stock }})</p>
+
+            {% else %}
+            <p class="stock out-stock">Out of Stock</p>
+
+            {% endif %}
+
+            <a href="url_for('main.book', book_id = book.id)" class="view-btn">View Details</a>
+        </div>
+
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock content %}
