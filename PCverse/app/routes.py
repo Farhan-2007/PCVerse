@@ -1,28 +1,29 @@
 from flask import Blueprint, render_template
 from app.models import Product, Category
 
-main = Blueprint('main', __name__)
+main = Blueprint("main", __name__)
 
-# Home Page
+# ================= HOME =================
 
 @main.route("/")
 def home():
 
-    products = Product.query.order_by(Product.name.asc()).all()
+    featured_products = Product.query.order_by(Product.name.asc()).limit(8).all()
 
     return render_template(
         "home.html",
-        products=products
+        products=featured_products
     )
 
-# All Products
+
+# ================= ALL PRODUCTS =================
 
 @main.route("/products")
 def products():
 
     products = Product.query.order_by(Product.name.asc()).all()
 
-    categories = Category.query.all()
+    categories = Category.query.order_by(Category.name.asc()).all()
 
     return render_template(
         "products.html",
@@ -30,7 +31,8 @@ def products():
         categories=categories
     )
 
-# Product Details
+
+# ================= PRODUCT DETAILS =================
 
 @main.route("/product/<int:product_id>")
 def product(product_id):
@@ -42,7 +44,8 @@ def product(product_id):
         product=product
     )
 
-# Category Products
+
+# ================= CATEGORY PRODUCTS =================
 
 @main.route("/category/<int:category_id>")
 def category_products(category_id):
@@ -50,7 +53,7 @@ def category_products(category_id):
     category = Category.query.get_or_404(category_id)
 
     products = Product.query.filter_by(
-        category_id=category_id
+        category_id=category.id
     ).order_by(Product.name.asc()).all()
 
     return render_template(

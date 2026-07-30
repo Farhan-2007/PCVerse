@@ -2,57 +2,61 @@
 
 {% block content %}
 
-<section class="books-section">
+<section class="products-section">
 
     <h2 class="section-title">{{ category.name }} Components</h2>
 
-    <div class="book-grid">
+    <div class="product-grid">
 
-        {% if books %}
+        {% if products %}
 
-        {% for book in books %}
+            {% for product in products %}
 
-        <div class="book-card">
+            <div class="product-card">
 
-            <img src="{{ url_for('static', filename='product_pics/' + book.image_file) }}" alt="{{ book.name }}">
+                <img src="{{ url_for('static', filename='product_pics/' + product.image_file) }}"
+                     alt="{{ product.name }}">
 
-            <h3>{{ book.name }}</h3>
+                <h3>{{ product.name }}</h3>
 
-            <p class="author">
-                <strong>Brand:</strong> {{ book.author }}
-            </p>
+                <p class="brand">
+                    <strong>Brand:</strong> {{ product.author }}
+                </p>
 
-            <p class="price">
-                ₹{{ book.price }}
-            </p>
+                <p class="price">
+                    ₹{{ product.price }}
+                </p>
 
-            {% if book.stock > 0 %}
+                {% if product.stock > 0 %}
 
-            <p class="stock in-stock">
-                In Stock ({{ book.stock }})
-            </p>
+                    <p class="stock in-stock">
+                        ✅ In Stock ({{ product.stock }})
+                    </p>
 
-            {% else %}
+                {% else %}
 
-            <p class="stock out-stock">
-                Out of Stock
-            </p>
+                    <p class="stock out-stock">
+                        ❌ Out of Stock
+                    </p>
 
-            {% endif %}
+                {% endif %}
 
-            <a href="{{ url_for('main.book', book_id=book.id) }}" class="view-btn">
-                View Details
-            </a>
+                <a href="{{ url_for('main.product', product_id=product.id) }}"
+                   class="view-btn">
 
-        </div>
+                    View Details
 
-        {% endfor %}
+                </a>
+
+            </div>
+
+            {% endfor %}
 
         {% else %}
 
-        <p class="empty-message">
-            No components found in this category.
-        </p>
+            <p class="empty-message">
+                No components found in this category.
+            </p>
 
         {% endif %}
 

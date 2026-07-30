@@ -2,39 +2,58 @@
 
 {% block content %}
 
-<h2> {{ book.name }}</h2>
+<div class="product-details">
 
-<img src="{{ url_for('static', filename='product_pics/' + book.image_file) }}" alt="{{ book.name }}" width="200">
+     <h2>{{ product.name }}</h2>
 
-<p><strong>Brand:</strong> {{ book.author }}</p>
+     <img src="{{ url_for('static', filename='product_pics/' + product.image_file) }}" alt="{{ product.name }}"
+          width="250">
 
-<p><strong>Category:</strong> {{ book.category.name }}</p>
+     <p><strong>Brand:</strong> {{ product.author }}</p>
 
-<p><strong>Price:</strong> ₹{{ book.price }}</p>
+     <p><strong>Category:</strong> {{ product.category.name }}</p>
 
-<p><strong>Stock: </strong>{{ book.stock }}</p>
+     <p><strong>Price:</strong> ₹{{ product.price }}</p>
 
-<h3>Description:</h3>
+     <p><strong>Stock:</strong> {{ product.stock }}</p>
 
-<p>{{ book.description }}</p>
+     <h3>Description</h3>
 
-<hr>
+     <p>{{ product.description }}</p>
 
-<h3>Specifications</h3>
+     <hr>
 
-<p>
-     Specifications will be displayed here after adding PC component data.
-</p>
+     <h3>Specifications</h3>
 
-<div class="product-actions">
+     <ul>
+          <li>Brand: {{ product.author }}</li>
+          <li>Category: {{ product.category.name }}</li>
+          <li>Availability:
+               {% if product.stock > 0 %}
+               In Stock
+               {% else %}
+               Out of Stock
+               {% endif %}
+          </li>
+     </ul>
 
-     <a href="{{ url_for('main.books') }}" class="hero-btn">
-          ← Back to Components
-     </a>
+     <div class="product-actions">
 
-     <a href="#" class="hero-btn-secondary">
-          Add to Cart
-     </a>
+          <a href="{{ url_for('main.products') }}" class="hero-btn">
+               ← Back to Components
+          </a>
+
+          {% if product.stock > 0 %}
+          <a href="#" class="hero-btn-secondary">
+               🛒 Add to Cart
+          </a>
+          {% else %}
+          <button class="hero-btn-secondary" disabled>
+               Out of Stock
+          </button>
+          {% endif %}
+
+     </div>
 
 </div>
 

@@ -23,7 +23,7 @@
 
             <div class="nav-center">
                 <a href="{{ url_for('main.home') }}">Home</a>
-                <a href="{{ url_for('main.books') }}">Components</a>
+                <a href="{{ url_for('main.products') }}">Components</a>
                 <a href="#">AI Builder</a>
             </div>
 
@@ -31,13 +31,11 @@
 
         <div class="search-box">
 
-            <form action="{{ url_for('main.books') }}" method="GET">
+            <form action="{{ url_for('main.products') }}" method="GET">
 
                 <input type="text" name="search" placeholder="Search PC components...">
 
-                <button type="submit">
-                    🔍
-                </button>
+                <button type="submit">🔍</button>
 
             </form>
 
@@ -91,7 +89,7 @@
                 <h2>PCVerse</h2>
 
                 <p>
-                    Build your perfect PC with our AI-powered assistant.
+                    Your one-stop destination for PC components, custom builds, and AI-powered compatibility checks.
                 </p>
 
             </div>
@@ -101,13 +99,9 @@
                 <h3>Quick Links</h3>
 
                 <a href="{{ url_for('main.home') }}">Home</a>
-
-                <a href="{{ url_for('main.books') }}">Components</a>
-
+                <a href="{{ url_for('main.products') }}">Components</a>
                 <a href="#">AI Builder</a>
-
                 <a href="{{ url_for('auth.login') }}">Login</a>
-
                 <a href="{{ url_for('auth.signup') }}">Signup</a>
 
             </div>
@@ -117,16 +111,13 @@
                 <h3>Categories</h3>
 
                 <p>CPU</p>
-
                 <p>GPU</p>
-
-                <p>MOTHERBOARD</p>
-
+                <p>Motherboard</p>
                 <p>RAM</p>
-
-                <p>SSD</p>
-                
-                <p>PSU</p>
+                <p>Storage</p>
+                <p>Power Supply</p>
+                <p>Cabinet</p>
+                <p>Cooling</p>
 
             </div>
 
@@ -143,9 +134,7 @@
         <hr>
 
         <p class="copyright">
-
             © 2026 PCVerse | AI-Powered PC Builder
-
         </p>
 
     </footer>
