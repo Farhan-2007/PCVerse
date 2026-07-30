@@ -177,7 +177,8 @@ body {
     background: #d4ac0d;
 }
 
-.books-section{
+.products-section,
+.featured-products{
     padding:60px 8%;
 }
 
@@ -210,13 +211,13 @@ body {
     color:#2c3e50;
 }
 
-.book-grid{
+.product-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
     gap:30px;
 }
 
-.book-card{
+.product-card{
     background:white;
     border-radius:15px;
     padding:20px;
@@ -225,25 +226,20 @@ body {
     transition:.3s;
 }
 
-.book-card:hover{
+.product-card:hover{
     transform:translateY(-10px);
 }
 
-.book-card img{
+.product-card img{
     width:180px;
     height:250px;
     object-fit:cover;
     border-radius:10px;
 }
 
-.book-card h3{
+.product-card h3{
     margin-top:15px;
     color:#2c3e50;
-}
-
-.author{
-    color:#777;
-    margin:10px 0;
 }
 
 .price{
