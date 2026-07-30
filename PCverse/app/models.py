@@ -21,7 +21,7 @@ class Product(db.Model):
 
     name = db.Column(db.String(100),nullable=False)
 
-    author = db.Column(db.String(100),nullable=False)
+    brand = db.Column(db.String(100),nullable=False)
 
     description = db.Column(db.Text,nullable=False)
 
@@ -34,7 +34,7 @@ class Product(db.Model):
     category_id = db.Column(db.Integer,db.ForeignKey('category.id'),nullable=False)
 
     def __repr__(self):
-        return f"Product('{self.name}', '{self.author}')"
+        return f"Product('{self.name}', '{self.brand}')"
 
 
 class User(UserMixin, db.Model):

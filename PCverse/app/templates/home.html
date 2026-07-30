@@ -2,21 +2,60 @@
 
 {% block content %}
 
+<!-- ================= HERO ================= -->
+
 <section class="hero">
+
     <div class="hero-content">
 
-        <h1>Discover Your Favorite Books</h1>
+        <h1>Build Your Dream PC</h1>
 
         <p>
-            Explore thousands of books from different categories,
-            bestselling authors, and timeless classics.
+            Explore PC components or let our AI recommend the
+            perfect build based on your budget and needs.
         </p>
 
         <a href="{{ url_for('main.books') }}" class="hero-btn">
-            Browse Books
+            Browse Components
+        </a>
+
+        <a href="#" class="hero-btn-secondary">
+            AI Builder
         </a>
 
     </div>
+
+</section>
+
+<!-- ================= FEATURED COMPONENTS ================= -->
+
+<section class="featured-products">
+
+    <h2>🔥 Featured Components</h2>
+
+    <div class="product-grid">
+
+        {% for book in books %}
+
+        <div class="product-card">
+
+            <img src="{{ url_for('static', filename='product_pics/' + book.image_file) }}"
+                 alt="{{ book.name }}">
+
+            <h3>{{ book.name }}</h3>
+
+            <p>₹{{ book.price }}</p>
+
+            <a href="{{ url_for('main.book', book_id=book.id) }}">
+                View Details
+            </a>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
 </section>
 
 {% endblock content %}

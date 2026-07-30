@@ -7,64 +7,106 @@ with app.app_context():
 
     if Category.query.count() == 0:
 
-        programming = Category(name="Programming")
-        fiction = Category(name="Fiction")
-        self_help = Category(name="Self Help")
+        # Categories
+
+        cpu = Category(name="CPU")
+        gpu = Category(name="GPU")
+        motherboard = Category(name="Motherboard")
+        ram = Category(name="RAM")
+        ssd = Category(name="SSD")
+        psu = Category(name="PSU")
 
         db.session.add_all([
-            programming,
-            fiction,
-            self_help
+            cpu,
+            gpu,
+            motherboard,
+            ram,
+            ssd,
+            psu
         ])
 
         db.session.commit()
 
-        books = [
-            Product(
-                name="To Kill a Mockingbird",
-                author = "Harper Lee",
-                description="A powerful story exploring justice, morality, and racial inequality in the American South",
-                price=699,
-                stock=20,
-                image_file = "mocking_bird.jpg",
-                category_id=fiction.id
-            ),
+        # Products
+
+        products = [
 
             Product(
-                name="The Silent Patient",
-                author = "Alex Michaelides",
-                description=" by Alex Michaelides: A gripping psychological thriller about a famous painter who shoots her husband and never speaks another word.",
-                price=899,
+                name="AMD Ryzen 7 7700X",
+                brand="AMD",
+                description="8-Core, 16-Thread Desktop Processor with AM5 Socket.",
+                price=29999,
                 stock=15,
-                image_file = "silent.jpeg",
-                category_id= fiction.id
+                image_file="ryzen7700x.jpg",
+                category_id=cpu.id
             ),
 
             Product(
-                name="Atomic Habits",
-                author = "James Clear",
-                description="Build better habits",
-                price=499,
+                name="Intel Core i5-14600K",
+                brand="Intel",
+                description="14-Core Desktop Processor for Gaming and Productivity.",
+                price=28999,
+                stock=18,
+                image_file="i5_14600k.jpg",
+                category_id=cpu.id
+            ),
+
+            Product(
+                name="NVIDIA GeForce RTX 5070",
+                brand="NVIDIA",
+                description="Powerful graphics card built for high-end gaming and content creation.",
+                price=64999,
+                stock=10,
+                image_file="rtx5070.jpg",
+                category_id=gpu.id
+            ),
+
+            Product(
+                name="ASUS TUF Gaming B650-Plus WiFi",
+                brand="ASUS",
+                description="AM5 motherboard with DDR5 support and PCIe 5.0.",
+                price=18999,
+                stock=12,
+                image_file="b650plus.jpg",
+                category_id=motherboard.id
+            ),
+
+            Product(
+                name="Corsair Vengeance DDR5 32GB",
+                brand="Corsair",
+                description="32GB (2×16GB) DDR5 6000MHz Desktop Memory Kit.",
+                price=10999,
+                stock=20,
+                image_file="corsair_ddr5.jpg",
+                category_id=ram.id
+            ),
+
+            Product(
+                name="Samsung 990 Pro 1TB",
+                brand="Samsung",
+                description="PCIe Gen4 NVMe M.2 SSD delivering ultra-fast read and write speeds.",
+                price=9999,
                 stock=25,
-                image_file = "atomic.jpg",
-                category_id=self_help.id
+                image_file="990pro.jpg",
+                category_id=ssd.id
             ),
 
             Product(
-                name="The Alchemist",
-                author = "Paulo Coelho",
-                description="Popular fiction novel",
-                price=299,
-                stock=30,
-                image_file = "alchemist.jpg",
-                category_id=fiction.id
+                name="Corsair RM750e",
+                brand="Corsair",
+                description="750W 80+ Gold Fully Modular Power Supply.",
+                price=8999,
+                stock=15,
+                image_file="rm750e.jpg",
+                category_id=psu.id
             )
+
         ]
 
-        db.session.add_all(books)
+        db.session.add_all(products)
         db.session.commit()
 
-        print("Sample data inserted!")
+        print("PCVerse sample data inserted successfully!")
 
     else:
         print("Database already contains data.")

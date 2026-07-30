@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h2> {{ book.name }}</h2>
+
+<img src="{{ url_for('static', filename='product_pics/' + book.image_file) }}" alt="{{ book.name }}" width="200">
+
+<p><strong>Brand:</strong> {{ book.author }}</p>
+
+<p><strong>Category:</strong> {{ book.category.name }}</p>
+
+<p><strong>Price:</strong> ₹{{ book.price }}</p>
+
+<p><strong>Stock: </strong>{{ book.stock }}</p>
+
+<h3>Description:</h3>
+
+<p>{{ book.description }}</p>
+
+<hr>
+
+<h3>Specifications</h3>
+
+<p>
+     Specifications will be displayed here after adding PC component data.
+</p>
+
+<div class="product-actions">
+
+     <a href="{{ url_for('main.books') }}" class="hero-btn">
+          ← Back to Components
+     </a>
+
+     <a href="#" class="hero-btn-secondary">
+          Add to Cart
+     </a>
+
+</div>
+
+{% endblock content %}
