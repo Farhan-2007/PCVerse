@@ -2,59 +2,108 @@
 
 {% block content %}
 
-<div class="product-details">
+<div class="product-container">
 
-     <h2>{{ product.name }}</h2>
+    <div class="product-image">
 
-     <img src="{{ url_for('static', filename='product_pics/' + product.image_file) }}" alt="{{ product.name }}"
-          width="250">
+        <img src="{{ url_for('static', filename='product_pics/' + product.image_file) }}"
+             alt="{{ product.name }}">
 
-     <p><strong>Brand:</strong> {{ product.author }}</p>
+    </div>
 
-     <p><strong>Category:</strong> {{ product.category.name }}</p>
+    <div class="product-info">
 
-     <p><strong>Price:</strong> ₹{{ product.price }}</p>
+        <h1>{{ product.name }}</h1>
 
-     <p><strong>Stock:</strong> {{ product.stock }}</p>
+        <p class="brand">
+            <strong>Brand:</strong> {{ product.brand }}
+        </p>
 
-     <h3>Description</h3>
+        <p class="category">
+            <strong>Category:</strong> {{ product.category.name }}
+        </p>
 
-     <p>{{ product.description }}</p>
+        <h2 class="product-price">
+            ₹{{ product.price }}
+        </h2>
 
-     <hr>
+        {% if product.stock > 0 %}
 
-     <h3>Specifications</h3>
+            <p class="stock in-stock">
+                ✔ In Stock
+            </p>
 
-     <ul>
-          <li>Brand: {{ product.author }}</li>
-          <li>Category: {{ product.category.name }}</li>
-          <li>Availability:
-               {% if product.stock > 0 %}
-               In Stock
-               {% else %}
-               Out of Stock
-               {% endif %}
-          </li>
-     </ul>
+        {% else %}
 
-     <div class="product-actions">
+            <p class="stock out-stock">
+                ✖ Out of Stock
+            </p>
 
-          <a href="{{ url_for('main.products') }}" class="hero-btn">
-               ← Back to Components
-          </a>
+        {% endif %}
 
-          {% if product.stock > 0 %}
-          <a href="#" class="hero-btn-secondary">
-               🛒 Add to Cart
-          </a>
-          {% else %}
-          <button class="hero-btn-secondary" disabled>
-               Out of Stock
-          </button>
-          {% endif %}
+        <div class="product-buttons">
 
-     </div>
+            <a href="#" class="cart-btn">
+                🛒 Add to Cart
+            </a>
+
+            <a href="#" class="wishlist-btn">
+                ❤️ Wishlist
+            </a>
+
+        </div>
+
+    </div>
 
 </div>
 
-{% endblock content %}
+<div class="description-box">
+
+    <h2>Description</h2>
+
+    <p>{{ product.description }}</p>
+
+</div>
+
+<div class="spec-box">
+
+    <h2>Specifications</h2>
+
+    <table>
+
+        <tr>
+            <td>Brand</td>
+            <td>{{ product.brand }}</td>
+        </tr>
+
+        <tr>
+            <td>Category</td>
+            <td>{{ product.category.name }}</td>
+        </tr>
+
+        <tr>
+            <td>Availability</td>
+
+            <td>
+
+                {% if product.stock > 0 %}
+                    In Stock
+                {% else %}
+                    Out of Stock
+                {% endif %}
+
+            </td>
+
+        </tr>
+
+    </table>
+
+</div>
+
+<a href="{{ url_for('main.products') }}" class="back-btn">
+
+    ← Back to Components
+
+</a>
+
+{% endblock %}
