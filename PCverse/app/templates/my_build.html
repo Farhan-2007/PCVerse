@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="builds-container">
+
+    <div class="build-header">
+
+        <h1>My PC Builds</h1>
+
+        <a href="{{ url_for('main.create_build') }}" class="create-build-btn">
+            + Create New Build
+        </a>
+
+    </div>
+
+    {% if builds %}
+
+    <div class="build-grid">
+
+        {% for build in builds %}
+
+        <div class="build-card">
+
+            <h2>{{ build.name }}</h2>
+
+            <p>
+                Created: {{ build.created_at.strftime("%d %b %Y") }}
+            </p>
+
+            <a href="{{ url_for('main.build', build_id=build.id) }}" class="view-btn">
+                Open Build
+            </a>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <div class="empty-build">
+
+        <h2>No Builds Yet</h2>
+
+        <p>Create Your First Custom PC Build!</p>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

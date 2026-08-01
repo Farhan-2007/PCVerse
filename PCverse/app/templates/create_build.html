@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="create-build-container">
+
+    <div class="create-build-card">
+
+        <h1>Create New Build</h1>
+
+        <p class="auth-subtitle">
+            Give your PC build a name.
+        </p>
+
+        <form method="POST">
+
+            <div class="form-group">
+
+                <label>Build Name</label>
+
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Example: Gaming Beast"
+                    required
+                >
+
+            </div>
+
+            <button type="submit" class="auth-btn">
+
+                Create Build
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="build-details-container">
+
+    <div class="build-details-card">
+
+        <div class="build-title">
+
+            <h1>{{ build.name }}</h1>
+
+            <p>
+                Created on {{ build.created_at.strftime("%d %b %Y") }}
+            </p>
+
+        </div>
+
+        <hr>
+
+        <h2>Selected Components</h2>
+
+        {% if build.items %}
+
+            <table class="build-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Category</th>
+                        <th>Component</th>
+                        <th>Brand</th>
+                        <th>Price</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for item in build.items %}
+
+                    <tr>
+
+                        <td>{{ item.product.category.name }}</td>
+
+                        <td>{{ item.product.name }}</td>
+
+                        <td>{{ item.product.brand }}</td>
+
+                        <td>₹{{ item.product.price }}</td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        {% else %}
+
+            <div class="empty-build">
+
+                <h2>No Components Added</h2>
+
+                <p>Start building your PC by adding components.</p>
+
+            </div>
+
+        {% endif %}
+
+        <div class="build-actions">
+
+            <a href="{{ url_for('main.products') }}" class="view-btn">
+
+                ➕ Add Components
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
