@@ -1,8 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from flask_login import login_required, current_user
-
 from app import db
-from app.models import Product, Category, Build
+from app.models import Product, Category, Build, BuildItem
 
 main = Blueprint("main", __name__)
 
@@ -21,11 +20,13 @@ def home():
 @main.route("/products")
 def products():
 
+    build_id = request.args.get("build_id", type = int)
+
     products = Product.query.order_by(Product.name.asc()).all()
 
     categories = Category.query.order_by(Category.name.asc()).all()
 
-    return render_template("products.html", products=products, categories=categories)
+    return render_template("products.html", build_id = build_id, products=products, categories=categories)
 
 # ================= PRODUCT DETAILS =================
 
@@ -34,7 +35,9 @@ def product(product_id):
 
     product = Product.query.get_or_404(product_id)
 
-    return render_template("product.html", product=product)
+    build_id = request.args.get("build_id", type=int)
+
+    return render_template("product.html", product=product, build_id = build_id)
 
 # ================= CATEGORY PRODUCTS =================
 
@@ -44,6 +47,8 @@ def category_products(category_id):
     category = Category.query.get_or_404(category_id)
 
     products = Product.query.filter_by(category_id=category.id).order_by(Product.name.asc()).all()
+
+    build_id = request.args.get("build_id", type=int)
 
     return render_template("category.html",category=category,products=products)
 
@@ -89,5 +94,47 @@ def build(build_id):
     if build.user_id != current_user.id:
         return redirect(url_for("main.my_builds"))
 
+    warnings = {}
+
+    for item in build.items:
+
+        category = item.product.category.name
+
+        if category not in warnings:
+            warnings[category] = []
+
+        warnings[category].append(item.product)
+
+    duplicate_warnings = {}
+
+    for category, products in warnings.items():
+
+        if len(products) > 1:
+            duplicate_warnings[category] = products
+
     return render_template(
-        "build.html", build=build)
+        "build.html",
+        build=build,
+        duplicate_warnings=duplicate_warnings
+    )
+
+@main.route("/build/<int:build_id>/add/<int:product_id>")
+@login_required
+def add_to_build(build_id, product_id):
+
+    build = Build.query.get_or_404(build_id)
+
+    if build.user_id != current_user.id:
+        return redirect(url_for("main.my_builds"))
+
+    product = Product.query.get_or_404(product_id)
+
+    new_item = BuildItem(
+        build_id=build.id,
+        product_id=product.id
+    )
+
+    db.session.add(new_item)
+    db.session.commit()
+
+    return redirect(url_for("main.build", build_id=build.id))

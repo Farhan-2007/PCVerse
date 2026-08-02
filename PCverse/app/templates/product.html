@@ -6,8 +6,7 @@
 
     <div class="product-image">
 
-        <img src="{{ url_for('static', filename='product_pics/' + product.image_file) }}"
-             alt="{{ product.name }}">
+        <img src="{{ url_for('static', filename='product_pics/' + product.image_file) }}" alt="{{ product.name }}">
 
     </div>
 
@@ -29,23 +28,39 @@
 
         {% if product.stock > 0 %}
 
-            <p class="stock in-stock">
-                ✔ In Stock
-            </p>
+        <p class="stock in-stock">
+            ✔ In Stock
+        </p>
 
         {% else %}
 
-            <p class="stock out-stock">
-                ✖ Out of Stock
-            </p>
+        <p class="stock out-stock">
+            ✖ Out of Stock
+        </p>
 
         {% endif %}
 
         <div class="product-buttons">
 
-            <a href="#" class="cart-btn">
+            {% if build_id %}
+
+            <a href="{{ url_for('main.add_to_build',
+                    build_id=build_id,
+                    product_id=product.id) }}" class="cart-btn">
+
                 ➕ Add to My Build
+
             </a>
+
+            {% else %}
+
+            <a href="{{ url_for('main.my_builds') }}" class="cart-btn">
+
+                ➕ Select a Build
+
+            </a>
+
+            {% endif %}
 
             <a href="#" class="wishlist-btn">
                 ❤️ Wishlist
@@ -87,9 +102,9 @@
             <td>
 
                 {% if product.stock > 0 %}
-                    In Stock
+                In Stock
                 {% else %}
-                    Out of Stock
+                Out of Stock
                 {% endif %}
 
             </td>
@@ -100,7 +115,7 @@
 
 </div>
 
-<a href="{{ url_for('main.products') }}" class="back-btn">
+<a href="{{ url_for('main.products', build_id = build_id) }}" class="back-btn">
 
     ← Back to Components
 

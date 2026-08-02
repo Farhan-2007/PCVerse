@@ -18,66 +18,102 @@
 
         <hr>
 
+        {% if duplicate_warnings %}
+
+        {% for category, products in duplicate_warnings.items() %}
+
+        <div class="warning-box">
+
+            <h3>⚠ Compatibility Warning</h3>
+
+            <p>
+                <strong>Multiple {{ category }} components detected.</strong>
+            </p>
+
+            <p>You have selected:</p>
+
+            <ul>
+
+                {% for product in products %}
+
+                <li>{{ product.name }}</li>
+
+                {% endfor %}
+
+            </ul>
+
+            <p>
+                A PC can only have one {{ category }}.
+            </p>
+
+            <p>
+                👉 Please remove one of the {{ category }}s before continuing.
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+        {% endif %}
+
         <h2>Selected Components</h2>
 
         {% if build.items %}
 
-            <table class="build-table">
+        <table class="build-table">
 
-                <thead>
+            <thead>
 
-                    <tr>
+                <tr>
 
-                        <th>Category</th>
-                        <th>Component</th>
-                        <th>Brand</th>
-                        <th>Price</th>
+                    <th>Category</th>
+                    <th>Component</th>
+                    <th>Brand</th>
+                    <th>Price</th>
 
-                    </tr>
+                </tr>
 
-                </thead>
+            </thead>
 
-                <tbody>
+            <tbody>
 
-                    {% for item in build.items %}
+                {% for item in build.items %}
 
-                    <tr>
+                <tr>
 
-                        <td>{{ item.product.category.name }}</td>
+                    <td>{{ item.product.category.name }}</td>
 
-                        <td>{{ item.product.name }}</td>
+                    <td>{{ item.product.name }}</td>
 
-                        <td>{{ item.product.brand }}</td>
+                    <td>{{ item.product.brand }}</td>
 
-                        <td>₹{{ item.product.price }}</td>
+                    <td>₹{{ item.product.price }}</td>
 
-                    </tr>
+                </tr>
 
-                    {% endfor %}
+                {% endfor %}
 
-                </tbody>
+            </tbody>
 
-            </table>
+        </table>
 
         {% else %}
 
-            <div class="empty-build">
+        <div class="empty-build">
 
-                <h2>No Components Added</h2>
+            <h2>No Components Added</h2>
 
-                <p>Start building your PC by adding components.</p>
+            <p>Start building your PC by adding components.</p>
 
-            </div>
+        </div>
 
         {% endif %}
 
         <div class="build-actions">
 
-            <a href="{{ url_for('main.products') }}" class="view-btn">
+            <a href="{{ url_for('main.my_builds') }}" class="back-btn"> ← Back to My Builds </a>
 
-                ➕ Add Components
-
-            </a>
+            <a href="{{ url_for('main.products', build_id = build.id) }}" class="view-btn"> ➕ Add Components </a>
 
         </div>
 
