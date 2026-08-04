@@ -797,3 +797,14 @@ body {
     color:#856404;
     font-weight:bold;
 }
+
+.remove-btn{
+    margin-left:15px;
+    color:#e74c3c;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.remove-btn:hover{
+    text-decoration:underline;
+}

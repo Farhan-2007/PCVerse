@@ -138,3 +138,19 @@ def add_to_build(build_id, product_id):
     db.session.commit()
 
     return redirect(url_for("main.build", build_id=build.id))
+
+@main.route("/build/<int:build_id>/remove/<int:item_id>")
+@login_required
+def remove_from_build(build_id, item_id):
+
+    build = Build.query.get_or_404(build_id)
+
+    if build.user_id != current_user.id:
+        return redirect(url_for("main.my_builds"))
+
+    item = BuildItem.query.get_or_404(item_id)
+
+    db.session.delete(item)
+    db.session.commit()
+
+    return redirect(url_for("main.build", build_id=build.id))

@@ -36,7 +36,27 @@
 
                 {% for product in products %}
 
-                <li>{{ product.name }}</li>
+                <li>
+
+                    {{ product.name }}
+
+                    {% for item in build.items %}
+
+                    {% if item.product.id == product.id %}
+
+                    <a href="{{ url_for('main.remove_from_build',
+                    build_id=build.id,
+                    item_id=item.id) }}" class="remove-btn">
+
+                        🗑 Remove
+
+                    </a>
+
+                    {% endif %}
+
+                    {% endfor %}
+
+                </li>
 
                 {% endfor %}
 
