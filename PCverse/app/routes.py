@@ -84,7 +84,6 @@ def create_build():
     return render_template("create_build.html")
 
 # ================= BUILD DETAILS =================
-
 @main.route("/build/<int:build_id>")
 @login_required
 def build(build_id):
@@ -103,20 +102,22 @@ def build(build_id):
         if category not in warnings:
             warnings[category] = []
 
-        warnings[category].append(item.product)
+        # Store the BuildItem instead of the Product
+        warnings[category].append(item)
 
     duplicate_warnings = {}
 
-    for category, products in warnings.items():
+    for category, items in warnings.items():
 
-        if len(products) > 1:
-            duplicate_warnings[category] = products
+        if len(items) > 1:
+            duplicate_warnings[category] = items
 
-    return render_template(
-        "build.html",
-        build=build,
-        duplicate_warnings=duplicate_warnings
-    )
+    total_price= 0;
+    for items in build.items:
+        total_price += items.product.price
+    
+
+    return render_template("build.html", build=build, duplicate_warnings=duplicate_warnings, total_price=total_price)
 
 @main.route("/build/<int:build_id>/add/<int:product_id>")
 @login_required
@@ -128,6 +129,14 @@ def add_to_build(build_id, product_id):
         return redirect(url_for("main.my_builds"))
 
     product = Product.query.get_or_404(product_id)
+
+    existing_item = BuildItem.query.filter_by(
+        build_id=build.id,
+        product_id=product.id
+    ).first()
+
+    if existing_item:
+        return redirect(url_for("main.build", build_id=build.id))
 
     new_item = BuildItem(
         build_id=build.id,

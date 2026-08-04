@@ -34,32 +34,23 @@
 
             <ul>
 
-                {% for product in products %}
+                {% for item in products %}
 
                 <li>
 
-                    {{ product.name }}
-
-                    {% for item in build.items %}
-
-                    {% if item.product.id == product.id %}
+                    {{ item.product.name }}
 
                     <a href="{{ url_for('main.remove_from_build',
-                    build_id=build.id,
-                    item_id=item.id) }}" class="remove-btn">
+        build_id=build.id,
+        item_id=item.id) }}" class="remove-btn">
 
                         🗑 Remove
 
                     </a>
 
-                    {% endif %}
-
-                    {% endfor %}
-
                 </li>
 
                 {% endfor %}
-
             </ul>
 
             <p>
@@ -112,7 +103,13 @@
                 </tr>
 
                 {% endfor %}
+                <tr class="total-row">
 
+                    <td colspan="3"><strong>Total Price</strong></td>
+
+                    <td><strong>₹{{ total_price }}</strong></td>
+
+                </tr>
             </tbody>
 
         </table>

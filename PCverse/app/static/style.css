@@ -808,3 +808,17 @@ body {
 .remove-btn:hover{
     text-decoration:underline;
 }
+.total-row{
+    background:#f8f9fa;
+}
+
+.total-row td{
+    font-size:20px;
+    font-weight:bold;
+    border-top:2px solid #2c3e50;
+    padding:18px 15px;
+}
+
+.total-row td:last-child{
+    color:#27ae60;
+}
