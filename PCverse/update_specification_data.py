@@ -5,89 +5,72 @@ app = create_app()
 
 with app.app_context():
 
-    product = Product.query.filter_by(name = "AMD Ryzen 5 7600").first()
+    product = Product.query.filter_by(
+        name="NVIDIA GeForce RTX 4060"
+    ).first()
 
     if product:
-                product.specification = """Socket: AM5
-Cores: 6
-Threads: 12
-Base Clock: 3.8 GHz
-Boost Clock: 5.1 GHz
-TDP: 65W"""
-                
-    product = Product.query.filter_by(name = "AMD Ryzen 7 7700X").first()
-
-    if product :
-                
-                product.specification = """Socket: AM5
-Cores: 8
-Threads: 16
-Base Clock: 4.5 GHz
-Boost Clock: 5.4 GHz
-TDP: 105W"""
-                
-    product = Product.query.filter_by(name = "Intel Core i5-14600K").first()
-
-    if product :
-                
-                product.specification = """Socket: LGA1700
-Cores: 14
-Threads: 20
-Base Clock: 3.5 GHz
-Boost Clock: 5.3 GHz
-TDP: 125W"""
-
-    product = Product.query.filter_by(name = "NVIDIA GeForce RTX 4060").first()
-
-    if product :
                 product.specification = """VRAM: 8 GB
-Memory Type: GDDR6
-Boost Clock: 2.46 GHz
-Power Consumption: 115W
-Interface: PCIe 4.0"""
-                
-    product = Product.query.filter_by(name = "NVIDIA GeForce RTX 5070").first()
+    Memory Type: GDDR6
+    Boost Clock: 2.46 GHz
+    Power Consumption: 115W
+    Interface: PCIe 4.0
+    Length: 242 mm"""
 
-    if product :
+
+    product = Product.query.filter_by(
+        name="NVIDIA GeForce RTX 5070"
+    ).first()
+
+    if product:
                 product.specification = """VRAM: 12 GB
-Memory Type: GDDR7
-Boost Clock: 2.51 GHz
-Power Consumption: 250W
-Interface: PCIe 5.0"""
-                
-    
-    product = Product.query.filter_by(name = "AMD Radeon RX 7800 XT").first()
+    Memory Type: GDDR7
+    Boost Clock: 2.51 GHz
+    Power Consumption: 250W
+    Interface: PCIe 5.0
+    Length: 304 mm"""
 
-    if product :
+
+    product = Product.query.filter_by(
+        name="AMD Radeon RX 7800 XT"
+    ).first()
+
+    if product:
                 product.specification = """VRAM: 16 GB
-Memory Type: GDDR6
-Boost Clock: 2.43 GHz
-Power Consumption: 263W
-Interface: PCIe 4.0"""
+    Memory Type: GDDR6
+    Boost Clock: 2.43 GHz
+    Power Consumption: 263W
+    Interface: PCIe 4.0
+    Length: 302 mm"""
 
+# ========= MOTHERBOARDS =============
 
-# ================= MOTHERBOARDS =================
-
-    product = Product.query.filter_by(name="ASUS TUF Gaming B650-Plus WiFi").first()
-
-    if product:
-                product.specification = """Socket: AM5
-Chipset: B650
-RAM Type: DDR5
-Maximum RAM: 128 GB
-RAM Slots: 4
-Form Factor: ATX"""
-
-
-    product = Product.query.filter_by(name="MSI MAG B650 Tomahawk WiFi").first()
+    product = Product.query.filter_by(
+        name="ASUS TUF Gaming B650-Plus WiFi"
+    ).first()
 
     if product:
                 product.specification = """Socket: AM5
-Chipset: B650
-RAM Type: DDR5
-Maximum RAM: 128 GB
-RAM Slots: 4
-Form Factor: ATX"""
+    Chipset: B650
+    RAM Type: DDR5
+    Maximum RAM: 128 GB
+    RAM Slots: 4
+    Form Factor: ATX
+    PCIe Version: PCIe 4.0"""
+
+
+    product = Product.query.filter_by(
+        name="MSI MAG B650 Tomahawk WiFi"
+    ).first()
+
+    if product:
+                product.specification = """Socket: AM5
+    Chipset: B650
+    RAM Type: DDR5
+    Maximum RAM: 128 GB
+    RAM Slots: 4
+    Form Factor: ATX
+    PCIe Version: PCIe 4.0"""
 
 # ================= RAM =================
 

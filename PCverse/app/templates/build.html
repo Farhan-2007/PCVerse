@@ -67,6 +67,81 @@
 
         {% endif %}
 
+        {% if compatibility_result %}
+
+        <div class="compatibility-box
+    {% if compatibility_result.compatible %}
+        compatible
+    {% else %}
+        incompatible
+    {% endif %}">
+
+            <div class="compatibility-header">
+
+                {% if compatibility_result.compatible %}
+
+                <span class="compatibility-icon">✅</span>
+
+                <div>
+                    <h3>Build Compatible</h3>
+                    <p>{{ compatibility_result.message }}</p>
+                </div>
+
+                {% else %}
+
+                <span class="compatibility-icon">⚠️</span>
+
+                <div>
+                    <h3>Compatibility Warning</h3>
+                    <p>{{ compatibility_result.message }}</p>
+                </div>
+
+                {% endif %}
+
+            </div>
+
+
+            {% if compatibility_result.results %}
+
+            <div class="compatibility-details">
+
+                <h4>Compatibility Details</h4>
+
+                {% for result in compatibility_result.results %}
+
+                <div class="compatibility-result
+            {% if result.compatible %}
+                result-compatible
+            {% else %}
+                result-incompatible
+            {% endif %}">
+
+                    {% if result.compatible %}
+
+                    <span>✅</span>
+
+                    <p>{{ result.message }}</p>
+
+                    {% else %}
+
+                    <span>❌</span>
+
+                    <p>{{ result.message }}</p>
+
+                    {% endif %}
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+        {% endif %}
+
         <h2>Selected Components</h2>
 
         {% if build.items %}

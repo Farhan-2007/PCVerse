@@ -839,3 +839,177 @@ body {
     line-height: 1.8;
     color: #555;
 }
+
+/* =========================================================
+   COMPATIBILITY WARNING BOX
+   ========================================================= */
+
+.compatibility-box {
+
+    margin: 25px 0;
+    padding: 22px;
+
+    border-radius: 12px;
+
+    border: 1px solid;
+
+    background: #ffffff;
+
+}
+
+
+/* ================= HEADER ================= */
+
+.compatibility-header {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 15px;
+
+}
+
+
+.compatibility-icon {
+
+    font-size: 30px;
+
+}
+
+
+.compatibility-header h3 {
+
+    margin: 0 0 5px 0;
+
+    font-size: 21px;
+
+}
+
+
+.compatibility-header p {
+
+    margin: 0;
+
+    font-size: 15px;
+
+    line-height: 1.5;
+
+}
+
+
+/* ================= COMPATIBLE ================= */
+
+.compatibility-box.compatible {
+
+    border-color: #22c55e;
+
+    background: #f0fdf4;
+
+}
+
+
+.compatibility-box.compatible .compatibility-header h3 {
+
+    color: #15803d;
+
+}
+
+
+/* ================= INCOMPATIBLE ================= */
+
+.compatibility-box.incompatible {
+
+    border-color: #ef4444;
+
+    background: #fef2f2;
+
+}
+
+
+.compatibility-box.incompatible .compatibility-header h3 {
+
+    color: #dc2626;
+
+}
+
+
+/* ================= DETAILS ================= */
+
+.compatibility-details {
+
+    margin-top: 20px;
+
+    padding-top: 18px;
+
+    border-top: 1px solid #ddd;
+
+}
+
+
+.compatibility-details h4 {
+
+    margin: 0 0 12px 0;
+
+    font-size: 17px;
+
+}
+
+
+/* ================= INDIVIDUAL RESULT ================= */
+
+.compatibility-result {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 10px;
+
+    padding: 10px 12px;
+
+    margin-bottom: 8px;
+
+    border-radius: 8px;
+
+}
+
+
+.compatibility-result span {
+
+    font-size: 17px;
+
+}
+
+
+.compatibility-result p {
+
+    margin: 0;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+}
+
+
+/* ================= SUCCESS RESULT ================= */
+
+.result-compatible {
+
+    background: #ecfdf5;
+
+    border: 1px solid #bbf7d0;
+
+}
+
+
+/* ================= ERROR RESULT ================= */
+
+.result-incompatible {
+
+    background: #fff1f2;
+
+    border: 1px solid #fecdd3;
+
+}

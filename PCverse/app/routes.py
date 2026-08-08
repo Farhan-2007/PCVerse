@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
 from app.models import Product, Category, Build, BuildItem
+from app.compatibility import check_build_compatibility
 
 main = Blueprint("main", __name__)
 
@@ -106,6 +107,7 @@ def build(build_id):
         warnings[category].append(item)
 
     duplicate_warnings = {}
+    compatibility_result = check_build_compatibility(build)
 
     for category, items in warnings.items():
 
@@ -117,7 +119,7 @@ def build(build_id):
         total_price += items.product.price
     
 
-    return render_template("build.html", build=build, duplicate_warnings=duplicate_warnings, total_price=total_price)
+    return render_template("build.html", build=build, duplicate_warnings=duplicate_warnings, total_price=total_price, compatibility_result=compatibility_result)
 
 @main.route("/build/<int:build_id>/add/<int:product_id>")
 @login_required
