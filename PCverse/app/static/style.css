@@ -822,3 +822,20 @@ body {
 .total-row td:last-child{
     color:#27ae60;
 }
+
+.product-specification {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.product-specification h3 {
+    color: #2c3e50;
+    margin-bottom: 12px;
+}
+
+.product-specification p {
+    white-space: pre-line;
+    line-height: 1.8;
+    color: #555;
+}

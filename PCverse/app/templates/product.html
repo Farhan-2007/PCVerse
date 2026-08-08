@@ -113,6 +113,18 @@
 
     </table>
 
+    {% if product.specification %}
+
+    <div class="product-specification">
+
+        <h3>Technical Specification</h3>
+
+        <p>{{ product.specification }}</p>
+
+    </div>
+
+    {% endif %}
+
 </div>
 
 <a href="{{ url_for('main.products', build_id = build_id) }}" class="back-btn">

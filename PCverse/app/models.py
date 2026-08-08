@@ -35,6 +35,8 @@ class Product(db.Model):
 
     stock = db.Column(db.Integer, nullable=False, default=0)
 
+    specification = db.Column(db.Text, nullable = True)
+
     category_id = db.Column(db.Integer, db.ForeignKey("category.id"), nullable=False)
 
     def __repr__(self):
