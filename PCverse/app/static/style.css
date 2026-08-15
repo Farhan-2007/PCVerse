@@ -1013,3 +1013,236 @@ body {
     border: 1px solid #fecdd3;
 
 }
+
+/* ================= POWER ANALYSIS ================= */
+
+.power-box {
+    margin-top: 25px;
+    padding: 20px 25px;
+    background: #f5f9ff;
+    border: 1px solid #c9dcf5;
+    border-left: 5px solid #2563eb;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.power-box h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+.power-box p {
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+.power-box strong {
+    font-weight: 600;
+}
+
+.power-success {
+    margin-top: 15px;
+    padding: 12px;
+    background: #e8f7ee;
+    border: 1px solid #a8dfbb;
+    border-radius: 6px;
+    color: #18733c;
+    font-weight: 600;
+}
+
+.power-danger {
+    margin-top: 15px;
+    padding: 12px;
+    background: #fdecec;
+    border: 1px solid #f0b5b5;
+    border-radius: 6px;
+    color: #b42318;
+    font-weight: 600;
+}
+
+.power-warning {
+    margin-top: 15px;
+    padding: 12px;
+    background: #fff7e6;
+    border: 1px solid #f1d28a;
+    border-radius: 6px;
+    color: #8a5a00;
+    font-weight: 600;
+}
+
+.psu-recommendations {
+    margin-top: 20px;
+}
+
+.psu-recommendations h4 {
+    margin-bottom: 12px;
+    font-size: 17px;
+}
+
+.psu-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.psu-option {
+    padding: 12px 18px;
+    background: white;
+    border: 1px solid #d5dbe3;
+    border-radius: 8px;
+    min-width: 110px;
+    text-align: center;
+}
+
+.psu-option strong {
+    display: block;
+    font-size: 18px;
+}
+
+.psu-option span {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* ================= PCVERSE RECOMMENDATION ================= */
+
+.pcverse-recommendation-box {
+    margin-top: 25px;
+    padding: 25px;
+    background: #f8f9ff;
+    border: 1px solid #d8dcef;
+    border-left: 5px solid #7c3aed;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.pcverse-header h3 {
+    margin: 0 0 6px;
+    font-size: 21px;
+}
+
+.pcverse-header p {
+    margin: 0 0 20px;
+    color: #666;
+}
+
+.usage-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.usage-form-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.usage-select {
+    flex: 1;
+    padding: 11px 14px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    background: white;
+    font-size: 15px;
+}
+
+.usage-btn {
+    padding: 11px 18px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.pcverse-result {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.pcverse-result-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pcverse-result-title span {
+    font-size: 22px;
+}
+
+.pcverse-result-title h4 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.recommendation-status {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 9px 14px;
+    border-radius: 7px;
+    font-weight: 600;
+}
+
+.recommendation-status.excellent {
+    background: #e8f7ee;
+    color: #18733b;
+}
+
+.recommendation-status.good {
+    background: #eef5ff;
+    color: #245ea8;
+}
+
+.recommendation-status.warning {
+    background: #fff4df;
+    color: #9a6700;
+}
+
+.recommendation-message {
+    margin-top: 12px;
+    line-height: 1.6;
+}
+
+/* ================= CPU GPU PERFORMANCE ================= */
+
+.performance-box {
+    margin-top: 20px;
+    padding: 20px 25px;
+    background: #f8f9ff;
+    border: 1px solid #d8dcef;
+    border-left: 5px solid #7c3aed;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.performance-box h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.performance-box p {
+    margin-top: 12px;
+    line-height: 1.6;
+}
+
+.performance-success {
+    padding: 10px 14px;
+    background: #e8f7ee;
+    border: 1px solid #a7dfbd;
+    color: #18733b;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.performance-warning {
+    padding: 10px 14px;
+    background: #fff7e6;
+    border: 1px solid #f0d18a;
+    color: #9a6700;
+    border-radius: 6px;
+    font-weight: 600;
+}

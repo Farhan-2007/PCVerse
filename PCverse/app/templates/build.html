@@ -6,6 +6,8 @@
 
     <div class="build-details-card">
 
+        <!-- ================= BUILD TITLE ================= -->
+
         <div class="build-title">
 
             <h1>{{ build.name }}</h1>
@@ -17,6 +19,9 @@
         </div>
 
         <hr>
+
+
+        <!-- ================= DUPLICATE WARNINGS ================= -->
 
         {% if duplicate_warnings %}
 
@@ -40,17 +45,21 @@
 
                     {{ item.product.name }}
 
-                    <a href="{{ url_for('main.remove_from_build',
-        build_id=build.id,
-        item_id=item.id) }}" class="remove-btn">
-
+                    <a
+                        href="{{ url_for(
+                            'main.remove_from_build',
+                            build_id=build.id,
+                            item_id=item.id
+                        ) }}"
+                        class="remove-btn"
+                    >
                         🗑 Remove
-
                     </a>
 
                 </li>
 
                 {% endfor %}
+
             </ul>
 
             <p>
@@ -67,33 +76,55 @@
 
         {% endif %}
 
+
+        <!-- ================= COMPATIBILITY ================= -->
+
         {% if compatibility_result %}
 
         <div class="compatibility-box
-    {% if compatibility_result.compatible %}
-        compatible
-    {% else %}
-        incompatible
-    {% endif %}">
+            {% if compatibility_result.compatible %}
+                compatible
+            {% else %}
+                incompatible
+            {% endif %}
+        ">
 
             <div class="compatibility-header">
 
                 {% if compatibility_result.compatible %}
 
-                <span class="compatibility-icon">✅</span>
+                <span class="compatibility-icon">
+                    ✅
+                </span>
 
                 <div>
-                    <h3>Build Compatible</h3>
-                    <p>{{ compatibility_result.message }}</p>
+
+                    <h3>
+                        Build Compatible
+                    </h3>
+
+                    <p>
+                        {{ compatibility_result.message }}
+                    </p>
+
                 </div>
 
                 {% else %}
 
-                <span class="compatibility-icon">⚠️</span>
+                <span class="compatibility-icon">
+                    ⚠️
+                </span>
 
                 <div>
-                    <h3>Compatibility Warning</h3>
-                    <p>{{ compatibility_result.message }}</p>
+
+                    <h3>
+                        Compatibility Warning
+                    </h3>
+
+                    <p>
+                        {{ compatibility_result.message }}
+                    </p>
+
                 </div>
 
                 {% endif %}
@@ -105,30 +136,33 @@
 
             <div class="compatibility-details">
 
-                <h4>Compatibility Details</h4>
+                <h4>
+                    Compatibility Details
+                </h4>
 
                 {% for result in compatibility_result.results %}
 
                 <div class="compatibility-result
-            {% if result.compatible %}
-                result-compatible
-            {% else %}
-                result-incompatible
-            {% endif %}">
+                    {% if result.compatible %}
+                        result-compatible
+                    {% else %}
+                        result-incompatible
+                    {% endif %}
+                ">
 
                     {% if result.compatible %}
 
                     <span>✅</span>
 
-                    <p>{{ result.message }}</p>
-
                     {% else %}
 
                     <span>❌</span>
 
-                    <p>{{ result.message }}</p>
-
                     {% endif %}
+
+                    <p>
+                        {{ result.message }}
+                    </p>
 
                 </div>
 
@@ -142,7 +176,380 @@
 
         {% endif %}
 
-        <h2>Selected Components</h2>
+
+        <!-- ================================================= -->
+        <!-- PCVERSE RECOMMENDATION -->
+        <!-- ================================================= -->
+
+        <div class="pcverse-recommendation-box">
+
+            <div class="pcverse-header">
+
+                <h3>
+                    🎯 PCVerse Recommendation
+                </h3>
+
+                <p>
+                    Tell us what you plan to use this PC for.
+                </p>
+
+            </div>
+
+
+            <form
+                method="GET"
+                action="{{ url_for('main.build', build_id=build.id) }}"
+                class="usage-form"
+            >
+
+                <label for="usage">
+                    What will you use this PC for?
+                </label>
+
+                <div class="usage-form-row">
+
+                    <select
+                        name="usage"
+                        id="usage"
+                        class="usage-select"
+                    >
+
+                        <option value="">
+                            Select your usage
+                        </option>
+
+                        <option
+                            value="gaming"
+                            {% if usage == "gaming" %}selected{% endif %}
+                        >
+                            🎮 Gaming
+                        </option>
+
+                        <option
+                            value="programming"
+                            {% if usage == "programming" %}selected{% endif %}
+                        >
+                            💻 Programming
+                        </option>
+
+                        <option
+                            value="editing"
+                            {% if usage == "editing" %}selected{% endif %}
+                        >
+                            🎬 Video Editing
+                        </option>
+
+                        <option
+                            value="3d"
+                            {% if usage == "3d" %}selected{% endif %}
+                        >
+                            🧊 3D / Rendering
+                        </option>
+
+                        <option
+                            value="general"
+                            {% if usage == "general" %}selected{% endif %}
+                        >
+                            🖥️ General Use
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        type="submit"
+                        class="usage-btn"
+                    >
+                        Get Recommendation
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            <!-- ================= RECOMMENDATION RESULT ================= -->
+
+            {% if usage_result %}
+
+            <div class="pcverse-result">
+
+                <div class="pcverse-result-title">
+
+                    <span>
+                        🤖
+                    </span>
+
+                    <h4>
+                        {{ usage_result.usage }}
+                    </h4>
+
+                </div>
+
+
+                {% if usage_result.status == "excellent" %}
+
+                <div class="recommendation-status excellent">
+
+                    ✅ Excellent Choice
+
+                </div>
+
+
+                {% elif usage_result.status == "good" %}
+
+                <div class="recommendation-status good">
+
+                    👍 Good Choice
+
+                </div>
+
+
+                {% else %}
+
+                <div class="recommendation-status warning">
+
+                    ⚠️ Needs Improvement
+
+                </div>
+
+                {% endif %}
+
+
+                <p class="recommendation-message">
+
+                    {{ usage_result.message }}
+
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- CPU ↔ GPU PERFORMANCE -->
+        <!-- ================================================= -->
+
+        {% if performance_result %}
+
+        <div class="performance-box">
+
+            <h3>
+                🤖 CPU ↔ GPU Recommendation
+            </h3>
+
+
+            {% if performance_result.status == "balanced" %}
+
+            <div class="performance-success">
+
+                ✅ Balanced Build
+
+            </div>
+
+
+            {% elif performance_result.status == "cpu_limited" %}
+
+            <div class="performance-warning">
+
+                ⚠️ CPU may limit GPU performance
+
+            </div>
+
+
+            {% elif performance_result.status == "gpu_limited" %}
+
+            <div class="performance-warning">
+
+                ⚠️ GPU may limit overall gaming performance
+
+            </div>
+
+
+            {% else %}
+
+            <div class="performance-warning">
+
+                ⚠️ Unable to determine performance balance
+
+            </div>
+
+            {% endif %}
+
+
+            <p>
+                {{ performance_result.message }}
+            </p>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================================================= -->
+        <!-- POWER ANALYSIS -->
+        <!-- ================================================= -->
+
+        {% if power_result %}
+
+        <div class="power-box">
+
+            <h3>
+                ⚡ Power Analysis
+            </h3>
+
+
+            <p>
+
+                <strong>
+                    Estimated System Power:
+                </strong>
+
+                {{ power_result.total_power }}W
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Recommended PSU:
+                </strong>
+
+                {{ power_result.recommended_psu }}W
+
+            </p>
+
+
+            <!-- ================= PSU OPTIONS ================= -->
+
+            {% if power_result.recommended_options %}
+
+            <div class="psu-recommendations">
+
+                <h4>
+                    💡 Recommended PSU Options
+                </h4>
+
+
+                <div class="psu-options">
+
+                    {% for wattage in power_result.recommended_options %}
+
+                    <div class="psu-option">
+
+                        <strong>
+                            {{ wattage }}W
+                        </strong>
+
+
+                        {% if loop.first %}
+
+                        <span>
+                            Recommended
+                        </span>
+
+
+                        {% elif wattage <= power_result.recommended_psu + 150 %}
+
+                        <span>
+                            More Headroom
+                        </span>
+
+
+                        {% else %}
+
+                        <span>
+                            High Headroom
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- ================= SELECTED PSU ================= -->
+
+            {% if power_result.selected_psu %}
+
+            <p>
+
+                <strong>
+                    Selected PSU:
+                </strong>
+
+                {{ power_result.selected_psu.name }}
+
+                ({{ power_result.psu_wattage }}W)
+
+            </p>
+
+
+            {% if power_result.psu_compatible %}
+
+            <div class="power-success">
+
+                ✅ {{ power_result.psu_status }}
+
+            </div>
+
+
+            <p>
+
+                <strong>
+                    Power Headroom:
+                </strong>
+
+                {{ power_result.headroom }}W
+
+            </p>
+
+
+            {% else %}
+
+            <div class="power-danger">
+
+                ❌ {{ power_result.psu_status }}
+
+            </div>
+
+            {% endif %}
+
+
+            {% else %}
+
+            <div class="power-warning">
+
+                ⚠️ No PSU selected yet.
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================================================= -->
+        <!-- SELECTED COMPONENTS -->
+        <!-- ================================================= -->
+
+        <h2>
+            Selected Components
+        </h2>
+
 
         {% if build.items %}
 
@@ -152,14 +559,26 @@
 
                 <tr>
 
-                    <th>Category</th>
-                    <th>Component</th>
-                    <th>Brand</th>
-                    <th>Price</th>
+                    <th>
+                        Category
+                    </th>
+
+                    <th>
+                        Component
+                    </th>
+
+                    <th>
+                        Brand
+                    </th>
+
+                    <th>
+                        Price
+                    </th>
 
                 </tr>
 
             </thead>
+
 
             <tbody>
 
@@ -167,45 +586,91 @@
 
                 <tr>
 
-                    <td>{{ item.product.category.name }}</td>
+                    <td>
+                        {{ item.product.category.name }}
+                    </td>
 
-                    <td>{{ item.product.name }}</td>
+                    <td>
+                        {{ item.product.name }}
+                    </td>
 
-                    <td>{{ item.product.brand }}</td>
+                    <td>
+                        {{ item.product.brand }}
+                    </td>
 
-                    <td>₹{{ item.product.price }}</td>
+                    <td>
+                        ₹{{ item.product.price }}
+                    </td>
 
                 </tr>
 
                 {% endfor %}
+
+
+                <!-- TOTAL -->
+
                 <tr class="total-row">
 
-                    <td colspan="3"><strong>Total Price</strong></td>
+                    <td colspan="3">
 
-                    <td><strong>₹{{ total_price }}</strong></td>
+                        <strong>
+                            Total Price
+                        </strong>
+
+                    </td>
+
+                    <td>
+
+                        <strong>
+                            ₹{{ total_price }}
+                        </strong>
+
+                    </td>
 
                 </tr>
+
             </tbody>
 
         </table>
+
 
         {% else %}
 
         <div class="empty-build">
 
-            <h2>No Components Added</h2>
+            <h2>
+                No Components Added
+            </h2>
 
-            <p>Start building your PC by adding components.</p>
+            <p>
+                Start building your PC by adding components.
+            </p>
 
         </div>
 
         {% endif %}
 
+
+        <!-- ================================================= -->
+        <!-- ACTION BUTTONS -->
+        <!-- ================================================= -->
+
         <div class="build-actions">
 
-            <a href="{{ url_for('main.my_builds') }}" class="back-btn"> ← Back to My Builds </a>
+            <a
+                href="{{ url_for('main.my_builds') }}"
+                class="back-btn"
+            >
+                ← Back to My Builds
+            </a>
 
-            <a href="{{ url_for('main.products', build_id = build.id) }}" class="view-btn"> ➕ Add Components </a>
+
+            <a
+                href="{{ url_for('main.products', build_id=build.id) }}"
+                class="view-btn"
+            >
+                ➕ Add Components
+            </a>
 
         </div>
 

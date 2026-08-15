@@ -3,6 +3,10 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import Product, Category, Build, BuildItem
 from app.compatibility import check_build_compatibility
+from app.power_calculator import calculate_build_power
+from app.performance_recommendation import check_cpu_gpu_performance
+from app.usage_recommendation import get_usage_recommendation
+from app.performance import check_cpu_gpu_performance
 
 main = Blueprint("main", __name__)
 
@@ -85,6 +89,7 @@ def create_build():
     return render_template("create_build.html")
 
 # ================= BUILD DETAILS =================
+
 @main.route("/build/<int:build_id>")
 @login_required
 def build(build_id):
@@ -93,6 +98,10 @@ def build(build_id):
 
     if build.user_id != current_user.id:
         return redirect(url_for("main.my_builds"))
+
+    # =========================
+    # DUPLICATE COMPONENT CHECK
+    # =========================
 
     warnings = {}
 
@@ -103,52 +112,88 @@ def build(build_id):
         if category not in warnings:
             warnings[category] = []
 
-        # Store the BuildItem instead of the Product
         warnings[category].append(item)
 
     duplicate_warnings = {}
-    compatibility_result = check_build_compatibility(build)
 
     for category, items in warnings.items():
 
         if len(items) > 1:
             duplicate_warnings[category] = items
 
-    total_price= 0;
-    for items in build.items:
-        total_price += items.product.price
-    
+    # =========================
+    # COMPATIBILITY CHECK
+    # =========================
 
-    return render_template("build.html", build=build, duplicate_warnings=duplicate_warnings, total_price=total_price, compatibility_result=compatibility_result)
+    compatibility_result = check_build_compatibility(build)
 
-@main.route("/build/<int:build_id>/add/<int:product_id>")
-@login_required
-def add_to_build(build_id, product_id):
+    # =========================
+    # FIND CPU AND GPU
+    # =========================
 
-    build = Build.query.get_or_404(build_id)
+    cpu = None
+    gpu = None
 
-    if build.user_id != current_user.id:
-        return redirect(url_for("main.my_builds"))
+    for item in build.items:
 
-    product = Product.query.get_or_404(product_id)
+        category = item.product.category.name
 
-    existing_item = BuildItem.query.filter_by(
-        build_id=build.id,
-        product_id=product.id
-    ).first()
+        if category == "CPU":
+            cpu = item.product
 
-    if existing_item:
-        return redirect(url_for("main.build", build_id=build.id))
+        elif category == "GPU":
+            gpu = item.product
 
-    new_item = BuildItem(
-        build_id=build.id,
-        product_id=product.id
+    # =========================
+    # CPU ↔ GPU PERFORMANCE
+    # =========================
+
+    performance_result = None
+
+    if cpu and gpu:
+        performance_result = check_cpu_gpu_performance(cpu, gpu)
+
+    # =========================
+    # POWER CALCULATION
+    # =========================
+
+    power_result = calculate_build_power(build)
+
+    # =========================
+    # USAGE RECOMMENDATION
+    # =========================
+
+    usage = request.args.get("usage")
+
+    usage_result = None
+
+    if usage:
+        usage_result = get_usage_recommendation(build, usage)
+
+    # =========================
+    # TOTAL PRICE
+    # =========================
+
+    total_price = 0
+
+    for item in build.items:
+        total_price += item.product.price
+
+    # =========================
+    # RENDER PAGE
+    # =========================
+
+    return render_template(
+        "build.html",
+        build=build,
+        duplicate_warnings=duplicate_warnings,
+        compatibility_result=compatibility_result,
+        power_result=power_result,
+        performance_result=performance_result,
+        usage=usage,
+        usage_result=usage_result,
+        total_price=total_price
     )
-
-    db.session.add(new_item)
-    db.session.commit()
-
-    return redirect(url_for("main.build", build_id=build.id))
 
 @main.route("/build/<int:build_id>/remove/<int:item_id>")
 @login_required
