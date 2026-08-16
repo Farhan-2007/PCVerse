@@ -1,0 +1,195 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="recommendation-container">
+
+    <div class="recommendation-card">
+
+        <div class="recommendation-header">
+
+            <h1>🤖 PCVerse Recommendation</h1>
+
+            <p>
+                Tell us what you want to use your PC for and your budget.
+                PCVerse will recommend suitable components.
+            </p>
+
+        </div>
+
+        <form method="POST" class="recommendation-form">
+
+            <!-- USAGE -->
+
+            <div class="form-group">
+
+                <label for="usage">
+                    🎯 What will you use this PC for?
+                </label>
+
+                <select name="usage" id="usage" required>
+
+                    <option value="">
+                        Select your usage
+                    </option>
+
+                    <option value="gaming">
+                        🎮 Gaming
+                    </option>
+
+                    <option value="programming">
+                        💻 Programming
+                    </option>
+
+                    <option value="editing">
+                        🎬 Video Editing
+                    </option>
+
+                    <option value="3d">
+                        🧊 3D / Rendering
+                    </option>
+
+                    <option value="general">
+                        🖥️ General Use
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- BUDGET -->
+
+            <div class="form-group">
+
+                <label for="budget">
+                    💰 What is your budget?
+                </label>
+
+                <input
+                    type="number"
+                    name="budget"
+                    id="budget"
+                    placeholder="Enter budget in ₹"
+                    min="1"
+                    required
+                >
+
+            </div>
+
+
+            <!-- SUBMIT -->
+
+            <button
+                type="submit"
+                class="recommendation-btn"
+            >
+                🤖 Get Recommendations
+            </button>
+
+        </form>
+
+
+        <!-- ================= RESULT ================= -->
+
+        {% if recommendation_result %}
+
+            {% if recommendation_result.success %}
+
+            <div class="recommendation-result">
+
+                <h2>🏆 Recommended Components</h2>
+
+
+                <!-- SUMMARY -->
+
+                <div class="recommendation-summary">
+
+                    <p>
+                        <strong>Usage:</strong>
+                        {{ recommendation_result.usage|capitalize }}
+                    </p>
+
+                    <p>
+                        <strong>Budget:</strong>
+                        ₹{{ "{:,.0f}".format(
+                            recommendation_result.budget
+                        ) }}
+                    </p>
+
+                    <p>
+                        <strong>Estimated Total:</strong>
+                        ₹{{ "{:,.0f}".format(
+                            recommendation_result.total_estimated_price
+                        ) }}
+                    </p>
+
+                    <p>
+                        <strong>Remaining Budget:</strong>
+                        ₹{{ "{:,.0f}".format(
+                            recommendation_result.remaining_budget
+                        ) }}
+                    </p>
+
+                </div>
+
+
+                <!-- COMPONENTS -->
+
+                <div class="recommended-components">
+
+                    {% for category, product in recommendation_result.recommendations.items() %}
+
+                    <div class="recommended-component-card">
+
+                        <div class="component-category">
+                            {{ category }}
+                        </div>
+
+                        <h3>
+                            {{ product.name }}
+                        </h3>
+
+                        <p>
+                            <strong>Brand:</strong>
+                            {{ product.brand }}
+                        </p>
+
+                        <p>
+                            <strong>Price:</strong>
+                            ₹{{ "{:,.0f}".format(product.price) }}
+                        </p>
+
+                        {% if product.specification %}
+
+                        <p class="component-specification">
+                            {{ product.specification }}
+                        </p>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            {% else %}
+
+            <div class="recommendation-error">
+
+                ⚠️ {{ recommendation_result.message }}
+
+            </div>
+
+            {% endif %}
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}
