@@ -7,6 +7,7 @@ from app.power_calculator import calculate_build_power
 from app.performance import check_cpu_gpu_performance
 from app.usage_recommendation import get_usage_recommendation
 from app.recommendation import recommend_components
+from flask import flash, abort
 
 main = Blueprint("main", __name__)
 
@@ -408,3 +409,17 @@ def recommendation():
         "recommendation.html",
         recommendation_result=recommendation_result
     )
+
+@main.route("/build/<int:build_id>/delete", methods=["POST"])
+@login_required
+def delete_build(build_id):
+    build = Build.query.get_or_404(build_id)
+
+    if build.user_id != current_user.id:
+        abort(403)
+
+    db.session.delete(build)
+    db.session.commit()
+
+    flash("Build deleted successfully!", "success")
+    return redirect(url_for("main.my_builds"))
