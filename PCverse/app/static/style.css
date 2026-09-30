@@ -1277,3 +1277,38 @@ body {
     border: none;
     cursor: pointer;
 }
+
+.build-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.build-actions form {
+    margin: 0;
+}
+
+.build-actions .view-btn,
+.build-actions .delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background-color: #b02a37;
+}   
