@@ -6,9 +6,9 @@ login_manager = LoginManager()
 
 db = SQLAlchemy()
 
-def create_app():
+def create_app(config_object='config.Config'):
     app = Flask(__name__)
-    app.config.from_object('config.Config')
+    app.config.from_object(config_object)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
 

@@ -1278,11 +1278,14 @@ body {
     cursor: pointer;
 }
 
+/* ================= BUILD ACTION BUTTONS ================= */
+
 .build-actions {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
-    margin-top: 15px;
+    margin-top: 30px;
 }
 
 .build-actions form {
@@ -1290,15 +1293,128 @@ body {
 }
 
 .build-actions .view-btn,
+.build-actions .back-btn,
 .build-actions .delete-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 40px;
-    padding: 0 16px;
     box-sizing: border-box;
+    height: 40px;
+    padding: 0 18px;
     border-radius: 6px;
+    font: inherit;
     font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background-color: #b02a37;
+}
+
+
+/* ================= FLASH MESSAGES ================= */
+
+.flash-messages { max-width: 900px; margin: 20px auto 0; }
+
+.flash {
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.flash-success { background: #e6f7ec; color: #1e7e34; border-color: #b7e4c7; }
+.flash-warning { background: #fff7e6; color: #9a6700; border-color: #f0d18a; }
+.flash-error   { background: #fdecea; color: #b02a37; border-color: #f5c2c7; }
+
+
+/* ================= RECOMMENDATION: CHECKS + CREATE BUILD ================= */
+
+.rec-notice { padding: 12px 16px; margin: 15px 0; border-radius: 6px; }
+
+.rec-notice-warning {
+    background: #fff7e6;
+    border: 1px solid #f0d18a;
+    color: #9a6700;
+}
+
+.rec-checks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.rec-check {
+    padding: 14px 16px;
+    border-radius: 8px;
+    border-left: 5px solid #999;
+    background: #f8f9fa;
+}
+
+.rec-check h4 { margin: 0 0 8px; }
+.rec-check p  { margin: 6px 0; font-size: 14px; }
+
+.rec-check-ok   { border-left-color: #28a745; background: #eefaf1; }
+.rec-check-warn { border-left-color: #f1c40f; background: #fffbea; }
+.rec-check-bad  { border-left-color: #dc3545; background: #fdf0f0; }
+.rec-check-detail { color: #b02a37; }
+
+.rec-create-build { margin-top: 25px; text-align: center; }
+.rec-create-hint  { margin-top: 10px; font-size: 14px; color: #666; }
+
+
+/* ================= BUILD TABLE ACTIONS + SWAP PAGE ================= */
+
+.item-actions { white-space: nowrap; }
+
+.swap-link { color: #2563eb; text-decoration: none; font-weight: bold; }
+.swap-link:hover { text-decoration: underline; }
+
+.swap-list { display: flex; flex-direction: column; gap: 14px; margin: 20px 0; }
+
+.swap-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    border-radius: 8px;
+    border-left: 5px solid #999;
+    background: #f8f9fa;
+}
+
+.swap-card h3 { margin: 0 0 6px; }
+.swap-card p  { margin: 4px 0; font-size: 14px; }
+
+.swap-ok  { border-left-color: #28a745; background: #eefaf1; }
+.swap-bad { border-left-color: #dc3545; background: #fdf0f0; }
+
+.swap-diff { margin-left: 8px; font-weight: 700; }
+.swap-diff-up   { color: #b02a37; }
+.swap-diff-down { color: #1e7e34; }
+
+.swap-status-ok  { color: #1e7e34; font-weight: 600; }
+.swap-status-bad { color: #b02a37; font-weight: 600; }
+
+.swap-card form { margin: 0; }
+
+.swap-card .view-btn {
+    height: 40px;
+    padding: 0 18px;
+    border: none;
+    cursor: pointer;
+    font: inherit;
     font-weight: 600;
 }
 
@@ -1311,4 +1427,5 @@ body {
 
 .delete-btn:hover {
     background-color: #b02a37;
-}   
+}  
+

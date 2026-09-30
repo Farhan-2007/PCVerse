@@ -45,14 +45,11 @@
 
                     {{ item.product.name }}
 
-                    <a
-                        href="{{ url_for(
+                    <a href="{{ url_for(
                             'main.remove_from_build',
                             build_id=build.id,
                             item_id=item.id
-                        ) }}"
-                        class="remove-btn"
-                    >
+                        ) }}" class="remove-btn">
                         🗑 Remove
                     </a>
 
@@ -196,11 +193,7 @@
             </div>
 
 
-            <form
-                method="GET"
-                action="{{ url_for('main.build', build_id=build.id) }}"
-                class="usage-form"
-            >
+            <form method="GET" action="{{ url_for('main.build', build_id=build.id) }}" class="usage-form">
 
                 <label for="usage">
                     What will you use this PC for?
@@ -208,58 +201,36 @@
 
                 <div class="usage-form-row">
 
-                    <select
-                        name="usage"
-                        id="usage"
-                        class="usage-select"
-                    >
+                    <select name="usage" id="usage" class="usage-select">
 
                         <option value="">
                             Select your usage
                         </option>
 
-                        <option
-                            value="gaming"
-                            {% if usage == "gaming" %}selected{% endif %}
-                        >
+                        <option value="gaming" {% if usage=="gaming" %}selected{% endif %}>
                             🎮 Gaming
                         </option>
 
-                        <option
-                            value="programming"
-                            {% if usage == "programming" %}selected{% endif %}
-                        >
+                        <option value="programming" {% if usage=="programming" %}selected{% endif %}>
                             💻 Programming
                         </option>
 
-                        <option
-                            value="editing"
-                            {% if usage == "editing" %}selected{% endif %}
-                        >
+                        <option value="editing" {% if usage=="editing" %}selected{% endif %}>
                             🎬 Video Editing
                         </option>
 
-                        <option
-                            value="3d"
-                            {% if usage == "3d" %}selected{% endif %}
-                        >
+                        <option value="3d" {% if usage=="3d" %}selected{% endif %}>
                             🧊 3D / Rendering
                         </option>
 
-                        <option
-                            value="general"
-                            {% if usage == "general" %}selected{% endif %}
-                        >
+                        <option value="general" {% if usage=="general" %}selected{% endif %}>
                             🖥️ General Use
                         </option>
 
                     </select>
 
 
-                    <button
-                        type="submit"
-                        class="usage-btn"
-                    >
+                    <button type="submit" class="usage-btn">
                         Get Recommendation
                     </button>
 
@@ -453,20 +424,18 @@
                         </span>
 
 
-                        {% elif wattage <= power_result.recommended_psu + 150 %}
-
-                        <span>
+                        {% elif wattage <= power_result.recommended_psu + 150 %} <span>
                             More Headroom
-                        </span>
+                            </span>
 
 
-                        {% else %}
+                            {% else %}
 
-                        <span>
-                            High Headroom
-                        </span>
+                            <span>
+                                High Headroom
+                            </span>
 
-                        {% endif %}
+                            {% endif %}
 
                     </div>
 
@@ -553,79 +522,57 @@
 
         {% if build.items %}
 
-        <table class="build-table">
+                <table class="build-table">
 
             <thead>
-
                 <tr>
-
-                    <th>
-                        Category
-                    </th>
-
-                    <th>
-                        Component
-                    </th>
-
-                    <th>
-                        Brand
-                    </th>
-
-                    <th>
-                        Price
-                    </th>
-
+                    <th>Category</th>
+                    <th>Component</th>
+                    <th>Brand</th>
+                    <th>Price</th>
+                    <th>Actions</th>
                 </tr>
-
             </thead>
-
 
             <tbody>
 
                 {% for item in build.items %}
-
                 <tr>
 
-                    <td>
-                        {{ item.product.category.name }}
-                    </td>
+                    <td>{{ item.product.category.name }}</td>
 
-                    <td>
-                        {{ item.product.name }}
-                    </td>
+                    <td>{{ item.product.name }}</td>
 
-                    <td>
-                        {{ item.product.brand }}
-                    </td>
+                    <td>{{ item.product.brand }}</td>
 
-                    <td>
-                        ₹{{ item.product.price }}
+                    <td>₹{{ "{:,.0f}".format(item.product.price) }}</td>
+
+                    <td class="item-actions">
+
+                        <a href="{{ url_for('main.swap_component', build_id=build.id, item_id=item.id) }}"
+                           class="swap-link">🔁 Swap</a>
+
+                        <a href="{{ url_for('main.remove_from_build', build_id=build.id, item_id=item.id) }}"
+                           class="remove-btn">🗑 Remove</a>
+
                     </td>
 
                 </tr>
-
                 {% endfor %}
-
 
                 <!-- TOTAL -->
 
                 <tr class="total-row">
 
                     <td colspan="3">
-
-                        <strong>
-                            Total Price
-                        </strong>
-
+                        <strong>Total Price</strong>
                     </td>
 
                     <td>
-
-                        <strong>
-                            ₹{{ total_price }}
-                        </strong>
-
+                        <strong>₹{{ "{:,.0f}".format(total_price) }}</strong>
                     </td>
+
+                    <td></td>
 
                 </tr>
 
@@ -657,18 +604,12 @@
 
         <div class="build-actions">
 
-            <a
-                href="{{ url_for('main.my_builds') }}"
-                class="back-btn"
-            >
+            <a href="{{ url_for('main.my_builds') }}" class="back-btn">
                 ← Back to My Builds
             </a>
 
 
-            <a
-                href="{{ url_for('main.products', build_id=build.id) }}"
-                class="view-btn"
-            >
+            <a href="{{ url_for('main.products', build_id=build.id) }}" class="view-btn">
                 ➕ Add Components
             </a>
 

@@ -304,6 +304,10 @@ def check_gpu_cabinet(gpu, cabinet):
         )
     }
 
+def _tag(result, pair):
+    """Attach the pair of categories a result refers to (used by swap)."""
+    result["pair"] = pair
+    return result
 
 # =========================================================
 # COMPLETE BUILD COMPATIBILITY

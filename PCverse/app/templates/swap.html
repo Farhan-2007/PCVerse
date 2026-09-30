@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="build-details-container">
+    <div class="build-details-card">
+
+        <div class="build-title">
+            <h1>🔁 Swap {{ item.product.category.name }}</h1>
+            <p>
+                Build: {{ build.name }}<br>
+                Current: <strong>{{ item.product.name }}</strong>
+                (₹{{ "{:,.0f}".format(item.product.price) }})
+            </p>
+        </div>
+
+        <hr>
+
+        {% if options %}
+        <div class="swap-list">
+
+            {% for option in options %}
+            <div class="swap-card {% if option.compatible and option.power_ok %}swap-ok{% else %}swap-bad{% endif %}">
+
+                <div class="swap-info">
+                    <h3>{{ option.product.name }}</h3>
+
+                    <p>
+                        {{ option.product.brand }} ·
+                        ₹{{ "{:,.0f}".format(option.product.price) }}
+
+                        {% if option.price_difference > 0 %}
+                        <span class="swap-diff swap-diff-up">+₹{{ "{:,.0f}".format(option.price_difference) }}</span>
+                        {% elif option.price_difference < 0 %}
+                        <span class="swap-diff swap-diff-down">−₹{{ "{:,.0f}".format(-option.price_difference) }}</span>
+                        {% endif %}
+                    </p>
+
+                    {% if option.compatible and option.power_ok %}
+                    <p class="swap-status swap-status-ok">✅ Compatible with the rest of your build</p>
+                    {% else %}
+                        {% for issue in option.issues %}
+                        <p class="swap-status swap-status-bad">❌ {{ issue }}</p>
+                        {% endfor %}
+                        {% if not option.power_ok %}
+                        <p class="swap-status swap-status-bad">
+                            ⚡ Your current power supply may not be enough
+                            (estimated draw {{ option.total_power }}W).
+                        </p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <form method="POST"
+                      action="{{ url_for('main.apply_swap', build_id=build.id, item_id=item.id, product_id=option.product.id) }}">
+                    <button type="submit" class="view-btn">
+                        {% if option.compatible and option.power_ok %}Use this{% else %}Use anyway{% endif %}
+                    </button>
+                </form>
+
+            </div>
+            {% endfor %}
+
+        </div>
+        {% else %}
+        <div class="empty-build">
+            <h2>No alternatives</h2>
+            <p>There are no other in-stock {{ item.product.category.name }} options.</p>
+        </div>
+        {% endif %}
+
+        <div class="build-actions">
+            <a href="{{ url_for('main.build', build_id=build.id) }}" class="back-btn">← Back to Build</a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

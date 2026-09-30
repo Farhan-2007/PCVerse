@@ -66,24 +66,14 @@
                     💰 What is your budget?
                 </label>
 
-                <input
-                    type="number"
-                    name="budget"
-                    id="budget"
-                    placeholder="Enter budget in ₹"
-                    min="1"
-                    required
-                >
+                <input type="number" name="budget" id="budget" placeholder="Enter budget in ₹" min="1" required>
 
             </div>
 
 
             <!-- SUBMIT -->
 
-            <button
-                type="submit"
-                class="recommendation-btn"
-            >
+            <button type="submit" class="recommendation-btn">
                 🤖 Get Recommendations
             </button>
 
@@ -94,101 +84,203 @@
 
         {% if recommendation_result %}
 
-            {% if recommendation_result.success %}
+        {% if recommendation_result.success %}
 
-            <div class="recommendation-result">
+        <div class="recommendation-result">
 
-                <h2>🏆 Recommended Components</h2>
-
-
-                <!-- SUMMARY -->
-
-                <div class="recommendation-summary">
-
-                    <p>
-                        <strong>Usage:</strong>
-                        {{ recommendation_result.usage|capitalize }}
-                    </p>
-
-                    <p>
-                        <strong>Budget:</strong>
-                        ₹{{ "{:,.0f}".format(
-                            recommendation_result.budget
-                        ) }}
-                    </p>
-
-                    <p>
-                        <strong>Estimated Total:</strong>
-                        ₹{{ "{:,.0f}".format(
-                            recommendation_result.total_estimated_price
-                        ) }}
-                    </p>
-
-                    <p>
-                        <strong>Remaining Budget:</strong>
-                        ₹{{ "{:,.0f}".format(
-                            recommendation_result.remaining_budget
-                        ) }}
-                    </p>
-
-                </div>
+            <h2>🏆 Recommended Components</h2>
 
 
-                <!-- COMPONENTS -->
+            <!-- SUMMARY -->
 
-                <div class="recommended-components">
+            <div class="recommendation-summary">
 
-                    {% for category, product in recommendation_result.recommendations.items() %}
+                <p>
+                    <strong>Usage:</strong>
+                    {{ recommendation_result.usage|capitalize }}
+                </p>
 
-                    <div class="recommended-component-card">
+                <p>
+                    <strong>Budget:</strong>
+                    ₹{{ "{:,.0f}".format(
+                    recommendation_result.budget
+                    ) }}
+                </p>
 
-                        <div class="component-category">
-                            {{ category }}
-                        </div>
+                <p>
+                    <strong>Estimated Total:</strong>
+                    ₹{{ "{:,.0f}".format(
+                    recommendation_result.total_estimated_price
+                    ) }}
+                </p>
 
-                        <h3>
-                            {{ product.name }}
-                        </h3>
+                <p>
+                    <strong>Remaining Budget:</strong>
+                    ₹{{ "{:,.0f}".format(
+                    recommendation_result.remaining_budget
+                    ) }}
+                </p>
 
-                        <p>
-                            <strong>Brand:</strong>
-                            {{ product.brand }}
-                        </p>
+            </div>
 
-                        <p>
-                            <strong>Price:</strong>
-                            ₹{{ "{:,.0f}".format(product.price) }}
-                        </p>
 
-                        {% if product.specification %}
+            <!-- COMPONENTS -->
+            <!-- MISSING PARTS -->
 
-                        <p class="component-specification">
-                            {{ product.specification }}
-                        </p>
+            {% if missing_categories %}
+            <div class="rec-notice rec-notice-warning">
+                <strong>⚠️ Incomplete build.</strong>
+                No suitable option was found within the budget share for:
+                {{ missing_categories|join(", ") }}.
+                Try a higher budget.
+            </div>
+            {% endif %}
 
-                        {% endif %}
 
-                    </div>
+            <!-- COMPATIBILITY + POWER CHECK -->
 
+            {% if analysis %}
+            <div class="rec-checks">
+
+                <div class="rec-check
+                        {% if analysis.compatibility.compatible %}rec-check-ok{% else %}rec-check-bad{% endif %}">
+
+                    <h4>
+                        {% if analysis.compatibility.compatible %}✅{% else %}❌{% endif %}
+                        Compatibility
+                    </h4>
+
+                    <p>{{ analysis.compatibility.message }}</p>
+
+                    {% for result in analysis.compatibility.results if not result.compatible %}
+                    <p class="rec-check-detail">❌ {{ result.message }}</p>
                     {% endfor %}
 
                 </div>
 
+                <div class="rec-check
+                        {% if analysis.power.selected_psu and not analysis.power.psu_compatible %}rec-check-bad
+                        {% elif analysis.power.selected_psu %}rec-check-ok
+                        {% else %}rec-check-warn{% endif %}">
+
+                    <h4>⚡ Power</h4>
+
+                    <p>
+                        Estimated draw: {{ analysis.power.total_power }}W.
+                        Recommended PSU: {{ analysis.power.recommended_psu }}W+.
+                    </p>
+
+                    {% if analysis.power.selected_psu %}
+                    <p>
+                        {{ analysis.power.selected_psu.name }}
+                        ({{ analysis.power.psu_wattage }}W):
+                        {{ analysis.power.psu_status }}
+                    </p>
+                    {% else %}
+                    <p>No power supply in this recommendation yet.</p>
+                    {% endif %}
+
+                </div>
+
             </div>
-
-            {% else %}
-
-            <div class="recommendation-error">
-
-                ⚠️ {{ recommendation_result.message }}
-
-            </div>
-
             {% endif %}
 
-        {% endif %}
+            <div class="recommended-components">
+
+                {% for category, product in recommendation_result.recommendations.items() %}
+
+                <div class="recommended-component-card">
+
+                    <div class="component-category">
+                        {{ category }}
+                    </div>
+
+                    <h3>
+                        {{ product.name }}
+                    </h3>
+
+                    <p>
+                        <strong>Brand:</strong>
+                        {{ product.brand }}
+                    </p>
+
+                    <p>
+                        <strong>Price:</strong>
+                        ₹{{ "{:,.0f}".format(product.price) }}
+                    </p>
+
+                    {% if product.specification %}
+
+                    <p class="component-specification">
+                        {{ product.specification }}
+                    </p>
+
+                    {% endif %}
+
+                </div>
+
+                {% endfor %}
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- CREATE BUILD -->
+
+            <div class="rec-create-build">
+
+                {% if current_user.is_authenticated %}
+
+                <form method="POST" action="{{ url_for('main.create_build_from_recommendation') }}">
+
+                    <input type="hidden" name="usage" value="{{ recommendation_result.usage }}">
+                    <input type="hidden" name="budget" value="{{ recommendation_result.budget }}">
+
+                    <button type="submit" class="recommendation-btn">
+                        🛠️ Create Build from this Recommendation
+                    </button>
+
+                    <p class="rec-create-hint">
+                        Saves these components to My Builds, where you can
+                        swap or remove any of them.
+                    </p>
+
+                </form>
+
+                {% else %}
+
+                <p class="rec-create-hint">
+                    <a href="{{ url_for('auth.login') }}">Log in</a> or
+                    <a href="{{ url_for('auth.signup') }}">sign up</a>
+                    to save this as a build.
+                </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        {% else %}
 
     </div>
+
+</div>
+
+{% else %}
+
+<div class="recommendation-error">
+
+    ⚠️ {{ recommendation_result.message }}
+
+</div>
+
+{% endif %}
+
+{% endif %}
+
+</div>
 
 </div>
 

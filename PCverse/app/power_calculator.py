@@ -31,7 +31,8 @@ def calculate_build_power(build):
         product = item.product
         category = product.category.name
 
-        total_power += get_power(product)
+        if category != "CPU Cooler":
+            total_power += get_power(product)
 
         if category == "Power Supply":
             selected_psu = product

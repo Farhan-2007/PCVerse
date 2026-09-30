@@ -6,7 +6,8 @@ from app.compatibility import check_build_compatibility
 from app.power_calculator import calculate_build_power
 from app.performance import check_cpu_gpu_performance
 from app.usage_recommendation import get_usage_recommendation
-from app.recommendation import recommend_components
+from app.recommendation import recommend_components, USAGE_PROFILES
+from app.build_tools import USAGE_LABELS, analyze_products, swap_options
 from flask import flash, abort
 
 main = Blueprint("main", __name__)
@@ -400,10 +401,33 @@ def recommendation():
 
         else:
 
-            recommendation_result = recommend_components(
+                        recommendation_result = recommend_components(
                 usage,
                 budget
             )
+
+    analysis = None
+    missing_categories = []
+
+    if recommendation_result and recommendation_result.get("success"):
+
+        picked = recommendation_result["recommendations"]
+
+        if picked:
+            analysis = analyze_products(list(picked.values()))
+
+        missing_categories = [
+            category
+            for category in USAGE_PROFILES[recommendation_result["usage"]]
+            if category not in picked
+        ]
+
+    return render_template(
+        "recommendation.html",
+        recommendation_result=recommendation_result,
+        analysis=analysis,
+        missing_categories=missing_categories
+    )
 
     return render_template(
         "recommendation.html",
@@ -423,3 +447,135 @@ def delete_build(build_id):
 
     flash("Build deleted successfully!", "success")
     return redirect(url_for("main.my_builds"))
+
+
+
+# ================= CREATE BUILD FROM RECOMMENDATION =================
+
+@main.route("/recommendation/create-build", methods=["POST"])
+@login_required
+def create_build_from_recommendation():
+
+    usage = request.form.get("usage")
+    budget = request.form.get("budget", type=float)
+
+    if not usage or not budget or budget <= 0:
+        flash("Please choose a usage and budget first.", "error")
+        return redirect(url_for("main.recommendation"))
+
+    # Recompute on the server instead of trusting product ids from the browser
+    result = recommend_components(usage, budget)
+
+    if not result["success"] or not result["recommendations"]:
+        flash("We couldn't recommend any components for that budget.", "error")
+        return redirect(url_for("main.recommendation"))
+
+    new_build = Build(
+        name=f"{USAGE_LABELS[result['usage']]} PC - ₹{budget:,.0f}",
+        user_id=current_user.id
+    )
+
+    db.session.add(new_build)
+    db.session.flush()
+
+    for product in result["recommendations"].values():
+        db.session.add(
+            BuildItem(build_id=new_build.id, product_id=product.id)
+        )
+
+    db.session.commit()
+
+    flash(
+        "Build created from your recommendation. "
+        "You can swap or remove any component below.",
+        "success"
+    )
+
+    return redirect(url_for("main.build", build_id=new_build.id))
+
+
+# ================= SWAP A COMPONENT =================
+
+def _get_owned_build_item(build_id, item_id):
+
+    build = Build.query.get_or_404(build_id)
+
+    if build.user_id != current_user.id:
+        abort(403)
+
+    item = BuildItem.query.get_or_404(item_id)
+
+    if item.build_id != build.id:
+        abort(404)
+
+    return build, item
+
+
+@main.route("/build/<int:build_id>/swap/<int:item_id>")
+@login_required
+def swap_component(build_id, item_id):
+
+    build, item = _get_owned_build_item(build_id, item_id)
+
+    candidates = (
+        Product.query
+        .filter(
+            Product.category_id == item.product.category_id,
+            Product.id != item.product_id,
+            Product.stock > 0
+        )
+        .order_by(Product.price.asc())
+        .all()
+    )
+
+    return render_template(
+        "swap.html",
+        build=build,
+        item=item,
+        options=swap_options(build, item, candidates)
+    )
+
+
+@main.route(
+    "/build/<int:build_id>/swap/<int:item_id>/<int:product_id>",
+    methods=["POST"]
+)
+@login_required
+def apply_swap(build_id, item_id, product_id):
+
+    build, item = _get_owned_build_item(build_id, item_id)
+
+    new_product = Product.query.get_or_404(product_id)
+
+    # Only same-category, in-stock replacements are allowed
+    if (
+        new_product.category_id != item.product.category_id
+        or new_product.stock <= 0
+    ):
+        abort(400)
+
+    if any(other.product_id == new_product.id for other in build.items):
+        flash(f"{new_product.name} is already in this build.", "warning")
+        return redirect(url_for("main.build", build_id=build.id))
+
+    old_name = item.product.name
+
+    item.product_id = new_product.id
+    db.session.commit()
+
+    issues = [
+        r["message"]
+        for r in check_build_compatibility(build)["results"]
+        if not r["compatible"]
+    ]
+
+    if issues:
+        flash(
+            f"Swapped {old_name} for {new_product.name}, "
+            "but the build now has compatibility issues.",
+            "warning"
+        )
+    else:
+        flash(f"Swapped {old_name} for {new_product.name}.", "success")
+
+    return redirect(url_for("main.build", build_id=build.id))
