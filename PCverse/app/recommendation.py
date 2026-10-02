@@ -151,6 +151,110 @@ def get_product_performance(product):
     return 0
 
 
+def pick_best_product(products):
+    """Highest score = performance + a bonus for performance per rupee."""
+
+    best_product = None
+    best_score = None
+
+    for product in products:
+
+        performance = get_product_performance(product)
+
+        price_ratio = (
+            performance / product.price
+            if product.price > 0
+            else 0
+        )
+
+        score = performance + (price_ratio * 100000)
+
+        if best_score is None or score > best_score:
+            best_product = product
+            best_score = score
+
+    return best_product
+
+
+def choose_components(profile, optional, available, budget):
+    """
+    Decide which product to pick for each category.
+
+    profile   : {"CPU": 0.25, "GPU": 0.40, ...}   budget share per category
+    optional  : categories that may be left out
+    available : {"CPU": [products in stock], ...}
+    budget    : total money in rupees
+
+    Returns (picked, minimum_budget).
+    """
+
+    # ---- Step 1: cheapest possible price in each category ----
+    cheapest = {}
+
+    for category, products in available.items():
+        if products:
+            cheapest[category] = min(p.price for p in products)
+
+    minimum_budget = sum(
+        price for category, price in cheapest.items()
+        if category not in optional
+    )
+
+    if budget < minimum_budget:
+        return {}, minimum_budget
+
+    # ---- Step 2: go category by category ----
+    picked = {}
+    remaining = budget
+    percent_left = sum(profile.values())
+
+    categories = list(profile)
+
+    for index, category in enumerate(categories):
+
+        percentage = profile[category]
+
+        # This category's share of the money that is STILL unspent.
+        # Because 'remaining' shrinks only by what we really spend,
+        # any unused money flows on to the next categories.
+        share = remaining * percentage / percent_left
+        percent_left -= percentage
+
+        if category not in cheapest:
+            continue   # nothing in stock for this category
+
+        # Always keep enough money for the required parts that come later
+        reserved = sum(
+            cheapest[later]
+            for later in categories[index + 1:]
+            if later in cheapest and later not in optional
+        )
+
+        spend_limit = remaining - reserved
+
+        if category in optional:
+            limit = min(share, spend_limit)
+        else:
+            # Required part: allowed to cost a bit more than its share
+            # if even the cheapest option is above the share.
+            limit = min(max(share, cheapest[category]), spend_limit)
+
+        affordable = [
+            product for product in available[category]
+            if product.price <= limit
+        ]
+
+        if not affordable:
+            continue
+
+        best_product = pick_best_product(affordable)
+
+        picked[category] = best_product
+        remaining -= best_product.price
+
+    return picked, minimum_budget
+
+
 def recommend_components(usage, budget):
 
     usage = usage.lower().strip()
@@ -172,60 +276,48 @@ def recommend_components(usage, budget):
         }
 
     profile = USAGE_PROFILES[usage]
+    optional = OPTIONAL_CATEGORIES.get(usage, [])
 
-    recommendations = {}
+    # Database part: fetch in-stock products for every category
+    available = {}
 
-    total_estimated_price = 0
+    for category in profile:
 
-    for category, percentage in profile.items():
-
-        category_budget = budget * percentage
-
-        products = Product.query.join(
-            Product.category
-        ).filter(
+        available[category] = Product.query.filter(
             Product.category.has(name=category),
-            Product.stock > 0,
-            Product.price <= category_budget
+            Product.stock > 0
         ).all()
 
-        if not products:
+    # Decision part: no database needed
+    recommendations, minimum_budget = choose_components(
+        profile,
+        optional,
+        available,
+        budget
+    )
 
-            continue
+    if not recommendations:
 
-        scored_products = []
+        return {
+            "success": False,
+            "message": (
+                f"This budget is too low for a complete {usage} PC. "
+                f"The cheapest complete build we can recommend costs "
+                f"about ₹{minimum_budget:,.0f}."
+            ),
+            "minimum_budget": minimum_budget,
+            "recommendations": {}
+        }
 
-        for product in products:
-
-            performance = get_product_performance(product)
-
-            price_ratio = (
-                performance / product.price
-                if product.price > 0
-                else 0
-            )
-
-            score = performance + (price_ratio * 100000)
-
-            scored_products.append(
-                (product, score)
-            )
-
-        scored_products.sort(
-            key=lambda x: x[1],
-            reverse=True
-        )
-
-        best_product = scored_products[0][0]
-
-        recommendations[category] = best_product
-
-        total_estimated_price += best_product.price
+    total_estimated_price = sum(
+        product.price for product in recommendations.values()
+    )
 
     return {
         "success": True,
         "usage": usage,
         "budget": budget,
+        "minimum_budget": minimum_budget,
         "total_estimated_price": total_estimated_price,
         "remaining_budget": budget - total_estimated_price,
         "recommendations": recommendations
