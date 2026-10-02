@@ -1,0 +1,5 @@
+﻿__pycache__/
+*.pyc
+instance/site.db
+frontend/node_modules/
+frontend/dist/
