@@ -9,6 +9,9 @@ from app.usage_recommendation import get_usage_recommendation
 from app.recommendation import recommend_components, USAGE_PROFILES
 from app.build_tools import USAGE_LABELS, analyze_products, swap_options
 from flask import flash, abort
+from app.build_score import calculate_build_score
+from app.upgrade_suggestions import get_upgrade_suggestions
+from app.models import Build, BuildItem, Product
 
 main = Blueprint("main", __name__)
 
@@ -242,6 +245,11 @@ def build(build_id):
 
         total_price += item.product.price
 
+
+    upgrade_suggestions = get_upgrade_suggestions(
+        build
+    )
+
     return render_template(
         "build.html",
 
@@ -266,8 +274,26 @@ def build(build_id):
             usage_result,
 
         total_price=
-            total_price
+            total_price,
+
+        upgrade_suggestions=upgrade_suggestions
     )
+
+@main.route("/build/<int:build_id>/delete", methods=["POST"])
+@login_required
+def delete_build(build_id):
+
+    build = Build.query.get_or_404(build_id)
+
+    if build.user_id != current_user.id:
+        abort(403)
+
+    db.session.delete(build)
+    db.session.commit()
+
+    flash("Build deleted successfully.", "success")
+
+    return redirect(url_for("main.my_builds"))
 
 # REMOVE COMPONENT FROM BUILD
 
@@ -386,6 +412,9 @@ def add_to_build(
 def recommendation():
 
     recommendation_result = None
+    analysis = None
+    build_score = None
+    missing_categories = []
 
     if request.method == "POST":
 
@@ -401,24 +430,35 @@ def recommendation():
 
         else:
 
-                        recommendation_result = recommend_components(
+            recommendation_result = recommend_components(
                 usage,
                 budget
             )
 
-    analysis = None
-    missing_categories = []
+            print("RECOMMENDATION RESULT:")
+            print(recommendation_result)
 
     if recommendation_result and recommendation_result.get("success"):
 
         picked = recommendation_result["recommendations"]
 
         if picked:
-            analysis = analyze_products(list(picked.values()))
+
+            analysis = analyze_products(
+                list(picked.values())
+            )
+
+            build_score = calculate_build_score(
+                picked,
+                analysis["compatibility"],
+                analysis["power"]
+            )
 
         missing_categories = [
             category
-            for category in USAGE_PROFILES[recommendation_result["usage"]]
+            for category in USAGE_PROFILES[
+                recommendation_result["usage"]
+            ]
             if category not in picked
         ]
 
@@ -426,28 +466,9 @@ def recommendation():
         "recommendation.html",
         recommendation_result=recommendation_result,
         analysis=analysis,
+        build_score=build_score,
         missing_categories=missing_categories
     )
-
-    return render_template(
-        "recommendation.html",
-        recommendation_result=recommendation_result
-    )
-
-@main.route("/build/<int:build_id>/delete", methods=["POST"])
-@login_required
-def delete_build(build_id):
-    build = Build.query.get_or_404(build_id)
-
-    if build.user_id != current_user.id:
-        abort(403)
-
-    db.session.delete(build)
-    db.session.commit()
-
-    flash("Build deleted successfully!", "success")
-    return redirect(url_for("main.my_builds"))
-
 
 
 # ================= CREATE BUILD FROM RECOMMENDATION =================

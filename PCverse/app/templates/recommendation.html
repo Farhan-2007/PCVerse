@@ -90,7 +90,6 @@
 
             <h2>🏆 Recommended Components</h2>
 
-
             <!-- SUMMARY -->
 
             <div class="recommendation-summary">
@@ -102,88 +101,163 @@
 
                 <p>
                     <strong>Budget:</strong>
-                    ₹{{ "{:,.0f}".format(
-                    recommendation_result.budget
-                    ) }}
+                    ₹{{ "{:,.0f}".format(recommendation_result.budget) }}
                 </p>
 
                 <p>
                     <strong>Estimated Total:</strong>
-                    ₹{{ "{:,.0f}".format(
-                    recommendation_result.total_estimated_price
-                    ) }}
+                    ₹{{ "{:,.0f}".format(recommendation_result.total_estimated_price) }}
                 </p>
 
                 <p>
                     <strong>Remaining Budget:</strong>
-                    ₹{{ "{:,.0f}".format(
-                    recommendation_result.remaining_budget
-                    ) }}
+                    ₹{{ "{:,.0f}".format(recommendation_result.remaining_budget) }}
                 </p>
 
             </div>
 
 
-            <!-- COMPONENTS -->
             <!-- MISSING PARTS -->
 
             {% if missing_categories %}
+
             <div class="rec-notice rec-notice-warning">
+
                 <strong>⚠️ Incomplete build.</strong>
+
                 No suitable option was found within the budget share for:
+
                 {{ missing_categories|join(", ") }}.
+
                 Try a higher budget.
+
             </div>
+
             {% endif %}
 
 
             <!-- COMPATIBILITY + POWER CHECK -->
 
             {% if analysis %}
+
             <div class="rec-checks">
 
                 <div class="rec-check
-                        {% if analysis.compatibility.compatible %}rec-check-ok{% else %}rec-check-bad{% endif %}">
+                            {% if analysis.compatibility.compatible %}
+                                rec-check-ok
+                            {% else %}
+                                rec-check-bad
+                            {% endif %}">
 
                     <h4>
-                        {% if analysis.compatibility.compatible %}✅{% else %}❌{% endif %}
+                        {% if analysis.compatibility.compatible %}
+                        ✅
+                        {% else %}
+                        ❌
+                        {% endif %}
+
                         Compatibility
                     </h4>
 
-                    <p>{{ analysis.compatibility.message }}</p>
+                    <p>
+                        {{ analysis.compatibility.message }}
+                    </p>
 
                     {% for result in analysis.compatibility.results if not result.compatible %}
-                    <p class="rec-check-detail">❌ {{ result.message }}</p>
+
+                    <p class="rec-check-detail">
+                        ❌ {{ result.message }}
+                    </p>
+
                     {% endfor %}
 
                 </div>
 
+
                 <div class="rec-check
-                        {% if analysis.power.selected_psu and not analysis.power.psu_compatible %}rec-check-bad
-                        {% elif analysis.power.selected_psu %}rec-check-ok
-                        {% else %}rec-check-warn{% endif %}">
+                            {% if analysis.power.selected_psu and not analysis.power.psu_compatible %}
+                                rec-check-bad
+                            {% elif analysis.power.selected_psu %}
+                                rec-check-ok
+                            {% else %}
+                                rec-check-warn
+                            {% endif %}">
 
                     <h4>⚡ Power</h4>
 
                     <p>
-                        Estimated draw: {{ analysis.power.total_power }}W.
-                        Recommended PSU: {{ analysis.power.recommended_psu }}W+.
+                        Estimated draw:
+                        {{ analysis.power.total_power }}W.
+
+                        Recommended PSU:
+                        {{ analysis.power.recommended_psu }}W+.
                     </p>
 
                     {% if analysis.power.selected_psu %}
+
                     <p>
                         {{ analysis.power.selected_psu.name }}
                         ({{ analysis.power.psu_wattage }}W):
                         {{ analysis.power.psu_status }}
                     </p>
+
                     {% else %}
-                    <p>No power supply in this recommendation yet.</p>
+
+                    <p>
+                        No power supply in this recommendation yet.
+                    </p>
+
                     {% endif %}
 
                 </div>
 
             </div>
+
             {% endif %}
+
+
+            <!-- BUILD SCORE -->
+
+            <div class="build-score-card">
+
+                <h2>🏆 PCVerse Build Score</h2>
+
+                <div class="build-score-number">
+                    {{ build_score.score }}/100
+                </div>
+
+                <div class="build-score-breakdown">
+
+                    {% for category, points in build_score.breakdown.items() %}
+
+                    <div class="build-score-item">
+
+                        <span>
+                            {{ category }}
+                        </span>
+
+                        <strong>
+                            {{ points }}/
+                            {% if category == "Compatibility" %}
+                            40
+                            {% elif category == "CPU/GPU Balance" %}
+                            30
+                            {% elif category == "Power" %}
+                            20
+                            {% else %}
+                            10
+                            {% endif %}
+                        </strong>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <!-- COMPONENTS -->
 
             <div class="recommended-components">
 
@@ -209,6 +283,14 @@
                         ₹{{ "{:,.0f}".format(product.price) }}
                     </p>
 
+                    <p class="recommendation-reason">
+                        <strong>Why this component?</strong>
+                        {{ recommendation_result.reasons.get(
+                        category,
+                        "Selected as a suitable component for this build."
+                        ) }}
+                    </p>
+
                     {% if product.specification %}
 
                     <p class="component-specification">
@@ -218,8 +300,6 @@
                     {% endif %}
 
                 </div>
-
-                {% endfor %}
 
                 {% endfor %}
 
@@ -235,6 +315,7 @@
                 <form method="POST" action="{{ url_for('main.create_build_from_recommendation') }}">
 
                     <input type="hidden" name="usage" value="{{ recommendation_result.usage }}">
+
                     <input type="hidden" name="budget" value="{{ recommendation_result.budget }}">
 
                     <button type="submit" class="recommendation-btn">
@@ -251,9 +332,19 @@
                 {% else %}
 
                 <p class="rec-create-hint">
-                    <a href="{{ url_for('auth.login') }}">Log in</a> or
-                    <a href="{{ url_for('auth.signup') }}">sign up</a>
+
+                    <a href="{{ url_for('auth.login') }}">
+                        Log in
+                    </a>
+
+                    or
+
+                    <a href="{{ url_for('auth.signup') }}">
+                        sign up
+                    </a>
+
                     to save this as a build.
+
                 </p>
 
                 {% endif %}
@@ -264,23 +355,17 @@
 
         {% else %}
 
+        <div class="recommendation-error">
+
+            ⚠️ {{ recommendation_result.message }}
+
+        </div>
+
+        {% endif %}
+
+        {% endif %}
+
     </div>
-
-</div>
-
-{% else %}
-
-<div class="recommendation-error">
-
-    ⚠️ {{ recommendation_result.message }}
-
-</div>
-
-{% endif %}
-
-{% endif %}
-
-</div>
 
 </div>
 

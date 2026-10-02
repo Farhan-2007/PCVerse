@@ -1,0 +1,149 @@
+/* =========================================================
+   PCVERSE RECOMMENDATION FORM
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .usage-form-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .usage-select,
+    .usage-btn {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+}
+
+
+/* =========================================================
+   RECOMMENDATION PAGE RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .recommendation-container {
+        width: 94%;
+    }
+
+    .recommendation-card {
+        padding: 25px;
+    }
+
+    .recommendation-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .build-score-breakdown {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .recommended-components {
+        grid-template-columns: 1fr;
+    }
+
+    .rec-create-build {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .rec-create-build form {
+        width: auto;
+    }
+
+    .rec-create-build .create-build-btn {
+        width: auto;
+        min-width: 280px;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .recommendation-container {
+        width: 95%;
+        margin: 25px auto;
+    }
+
+    .recommendation-card {
+        padding: 20px;
+    }
+
+    .recommendation-header {
+        align-items: flex-start;
+    }
+
+    .recommendation-header h1 {
+        font-size: 28px;
+    }
+
+    .recommendation-form-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .rec-checks {
+        grid-template-columns: 1fr;
+    }
+
+    .result-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .build-score-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .build-score-number {
+        text-align: left;
+    }
+
+    .section-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .recommendation-header {
+        flex-direction: column;
+    }
+
+    .recommendation-header h1 {
+        font-size: 25px;
+    }
+
+    .recommendation-header p {
+        font-size: 14px;
+    }
+
+    .recommendation-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .build-score-breakdown {
+        grid-template-columns: 1fr;
+    }
+
+    .component-info {
+        grid-template-columns: 1fr;
+    }
+
+    .rec-create-build {
+        padding: 20px;
+    }
+
+    .create-build-content {
+        align-items: center;
+    }
+
+}

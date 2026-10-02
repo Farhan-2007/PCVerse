@@ -174,34 +174,53 @@
         {% endif %}
 
 
+
         <!-- ================================================= -->
-        <!-- PCVERSE RECOMMENDATION -->
+        <!-- BUILD PAGE - PCVERSE RECOMMENDATION -->
         <!-- ================================================= -->
 
-        <div class="pcverse-recommendation-box">
+        <div class="build-recommendation-box">
 
-            <div class="pcverse-header">
+            <!-- ================= HEADER ================= -->
 
-                <h3>
-                    🎯 PCVerse Recommendation
-                </h3>
+            <div class="build-recommendation-header">
 
-                <p>
-                    Tell us what you plan to use this PC for.
-                </p>
+                <div class="build-recommendation-icon">
+                    🎯
+                </div>
+
+                <div>
+
+                    <span class="build-recommendation-label">
+                        PCVERSE ANALYSIS
+                    </span>
+
+                    <h3>
+                        PCVerse Recommendation
+                    </h3>
+
+                    <p>
+                        Tell us what you plan to use this PC for.
+                        PCVerse will analyze your current build.
+                    </p>
+
+                </div>
 
             </div>
 
 
-            <form method="GET" action="{{ url_for('main.build', build_id=build.id) }}" class="usage-form">
+            <!-- ================= FORM ================= -->
 
-                <label for="usage">
-                    What will you use this PC for?
-                </label>
+            <form method="GET" action="{{ url_for('main.build', build_id=build.id) }}"
+                class="build-recommendation-form">
 
-                <div class="usage-form-row">
+                <div class="build-recommendation-form-group">
 
-                    <select name="usage" id="usage" class="usage-select">
+                    <label for="usage">
+                        🎯 What will you use this PC for?
+                    </label>
+
+                    <select name="usage" id="usage" class="build-recommendation-select">
 
                         <option value="">
                             Select your usage
@@ -229,69 +248,67 @@
 
                     </select>
 
-
-                    <button type="submit" class="usage-btn">
-                        Get Recommendation
-                    </button>
-
                 </div>
+
+
+                <button type="submit" class="build-recommendation-btn">
+                    🤖 Get Recommendation
+                </button>
 
             </form>
 
 
-            <!-- ================= RECOMMENDATION RESULT ================= -->
+            <!-- ================= RESULT ================= -->
 
             {% if usage_result %}
 
-            <div class="pcverse-result">
+            <div class="build-recommendation-result">
 
-                <div class="pcverse-result-title">
+                <div class="build-result-header">
 
-                    <span>
-                        🤖
+                    <div>
+
+                        <span class="build-result-label">
+                            PCVERSE ANALYSIS
+                        </span>
+
+                        <h4>
+                            🤖 {{ usage_result.usage }}
+                        </h4>
+
+                    </div>
+
+
+                    {% if usage_result.status == "excellent" %}
+
+                    <span class="build-result-status build-result-excellent">
+                        ✅ Excellent Choice
                     </span>
 
-                    <h4>
-                        {{ usage_result.usage }}
-                    </h4>
+                    {% elif usage_result.status == "good" %}
+
+                    <span class="build-result-status build-result-good">
+                        👍 Good Choice
+                    </span>
+
+                    {% else %}
+
+                    <span class="build-result-status build-result-warning">
+                        ⚠️ Needs Improvement
+                    </span>
+
+                    {% endif %}
 
                 </div>
 
 
-                {% if usage_result.status == "excellent" %}
+                <div class="build-result-message">
 
-                <div class="recommendation-status excellent">
-
-                    ✅ Excellent Choice
-
-                </div>
-
-
-                {% elif usage_result.status == "good" %}
-
-                <div class="recommendation-status good">
-
-                    👍 Good Choice
+                    <p>
+                        {{ usage_result.message }}
+                    </p>
 
                 </div>
-
-
-                {% else %}
-
-                <div class="recommendation-status warning">
-
-                    ⚠️ Needs Improvement
-
-                </div>
-
-                {% endif %}
-
-
-                <p class="recommendation-message">
-
-                    {{ usage_result.message }}
-
-                </p>
 
             </div>
 
@@ -510,11 +527,77 @@
 
         {% endif %}
 
+        <!-- ================================================= -->
+        <!-- UPGRADE SUGGESTIONS -->
+        <!-- ================================================= -->
 
+        {% if upgrade_suggestions %}
+
+        <div class="upgrade-box">
+
+            <h3>
+                🚀 Upgrade Suggestions
+            </h3>
+
+            <p>
+                PCVerse found some compatible upgrades for your build.
+            </p>
+
+            {% for suggestion in upgrade_suggestions %}
+
+            <div class="upgrade-item">
+
+                <div class="upgrade-header">
+
+                    <h4>
+                        {{ suggestion.category }} Upgrade
+                    </h4>
+
+                </div>
+
+                <p>
+                    <strong>Current:</strong>
+                    {{ suggestion.current.name }}
+                    — ₹{{ "{:,.0f}".format(suggestion.current_price) }}
+                </p>
+
+                <p>
+                    <strong>Suggested:</strong>
+                    {{ suggestion.upgrade.name }}
+                    — ₹{{ "{:,.0f}".format(suggestion.upgrade_price) }}
+                </p>
+
+                <p>
+                    <strong>Additional Cost:</strong>
+                    ₹{{ "{:,.0f}".format(suggestion.additional_cost) }}
+                </p>
+
+                <p>
+                    <strong>Performance Improvement:</strong>
+                    {{ "{:,.1f}".format(suggestion.performance_increase) }}
+                </p>
+                <form method="POST" action="{{ url_for(
+        'main.apply_swap',
+        build_id=build.id,
+        item_id=suggestion.build_item_id,
+        product_id=suggestion.upgrade.id
+    ) }}">
+                    <button type="submit" class="view-btn">
+                        🚀 Upgrade to {{ suggestion.upgrade.name }}
+                    </button>
+                </form>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
         <!-- ================================================= -->
         <!-- SELECTED COMPONENTS -->
         <!-- ================================================= -->
-
+        <br>
         <h2>
             Selected Components
         </h2>
@@ -522,7 +605,7 @@
 
         {% if build.items %}
 
-                <table class="build-table">
+        <table class="build-table">
 
             <thead>
                 <tr>
@@ -550,10 +633,10 @@
                     <td class="item-actions">
 
                         <a href="{{ url_for('main.swap_component', build_id=build.id, item_id=item.id) }}"
-                           class="swap-link">🔁 Swap</a>
+                            class="swap-link">🔁 Swap</a>
 
                         <a href="{{ url_for('main.remove_from_build', build_id=build.id, item_id=item.id) }}"
-                           class="remove-btn">🗑 Remove</a>
+                            class="remove-btn">🗑 Remove</a>
 
                     </td>
 
