@@ -8,6 +8,7 @@ import Signup from "./pages/signup"
 import MyBuilds from "./pages/MyBuilds"
 import BuildDetails from "./pages/BuildDetails"
 import CreateBuild from "./pages/CreateBuild"
+import Recommendation from "./pages/Recommendation"
 
 import { getProducts } from "./services/api"
 
@@ -70,6 +71,24 @@ if (window.location.pathname === "/create-build") {
             <Navbar />
             <CreateBuild />
         </div>
+    )
+}
+
+if (window.location.pathname === "/products") {
+    return (
+        <div className="min-h-screen bg-zinc-950 text-white">
+            <Navbar />
+            <Products />
+        </div>
+    )
+}
+
+if (window.location.pathname === "/recommendation") {
+    return (
+        <>
+            <Navbar />
+            <Recommendation />
+        </>
     )
 }
 

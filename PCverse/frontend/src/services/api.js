@@ -210,3 +210,71 @@ export async function removeComponent(buildId, itemId) {
 
     return data
 }
+
+export async function getSwapOptions(buildId, itemId) {
+    const response = await fetch(
+        `${API_BASE_URL}/builds/${buildId}/items/${itemId}/swap-options`,
+        {
+            credentials: "include"
+        }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+        throw new Error(
+            data.message || "Failed to fetch swap options"
+        )
+    }
+
+    return data
+}
+
+export async function applySwap(buildId, itemId, productId) {
+
+    const response = await fetch(
+        `${API_BASE_URL}/builds/${buildId}/items/${itemId}/swap/${productId}`,
+        {
+            method: "POST",
+            credentials: "include"
+        }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+        throw new Error(
+            data.message || "Failed to swap component"
+        )
+    }
+
+    return data
+}
+
+export async function getRecommendations(usage, budget) {
+    const response = await fetch(
+        `${API_BASE_URL}/recommendation`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify({
+                usage,
+                budget
+            })
+        }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+        throw new Error(
+            data.message || "Failed to get recommendations"
+        )
+    }
+
+    return data
+}
+

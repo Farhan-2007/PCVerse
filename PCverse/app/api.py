@@ -10,6 +10,8 @@ from app.performance import check_cpu_gpu_performance
 from app.power_calculator import calculate_build_power
 from app.usage_recommendation import get_usage_recommendation
 from app.upgrade_suggestions import get_upgrade_suggestions
+from app.build_tools import swap_options
+from app.recommendation import recommend_components
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -491,3 +493,137 @@ def remove_component_api(build_id, item_id):
         "success": True,
         "message": "Component removed successfully."
     })
+
+# ================= SWAP COMPONENT OPTIONS =================
+
+@api.route(
+    "/builds/<int:build_id>/items/<int:item_id>/swap-options",
+    methods=["GET"]
+)
+@login_required
+def swap_component_options_api(build_id, item_id):
+
+    build = Build.query.get_or_404(build_id)
+
+    if build.user_id != current_user.id:
+        return jsonify({
+            "success": False,
+            "message": "Build not found."
+        }), 404
+
+    item = BuildItem.query.get_or_404(item_id)
+
+    if item.build_id != build.id:
+        return jsonify({
+            "success": False,
+            "message": "Component not found."
+        }), 404
+
+    candidates = (
+        Product.query
+        .filter(
+            Product.category_id == item.product.category_id,
+            Product.id != item.product_id,
+            Product.stock > 0
+        )
+        .order_by(Product.price.asc())
+        .all()
+    )
+
+    options = swap_options(
+        build,
+        item,
+        candidates
+    )
+
+    return jsonify({
+        "success": True,
+        "options": make_json_safe(options)
+    })
+
+@api.route(
+    "/builds/<int:build_id>/items/<int:item_id>/swap/<int:product_id>",
+    methods=["POST"]
+)
+@login_required
+def apply_swap_api(build_id, item_id, product_id):
+
+    build = Build.query.get_or_404(build_id)
+
+    if build.user_id != current_user.id:
+        return jsonify({
+            "success": False,
+            "message": "Build not found."
+        }), 404
+
+    item = BuildItem.query.get_or_404(item_id)
+
+    if item.build_id != build.id:
+        return jsonify({
+            "success": False,
+            "message": "Component not found."
+        }), 404
+
+    new_product = Product.query.get_or_404(product_id)
+
+    if new_product.category_id != item.product.category_id:
+        return jsonify({
+            "success": False,
+            "message": "Invalid replacement component."
+        }), 400
+
+    if new_product.stock <= 0:
+        return jsonify({
+            "success": False,
+            "message": "This component is out of stock."
+        }), 400
+
+    if any(
+        other.product_id == new_product.id
+        for other in build.items
+        if other.id != item.id
+    ):
+        return jsonify({
+            "success": False,
+            "message": "This component is already in the build."
+        }), 400
+
+    old_name = item.product.name
+
+    item.product_id = new_product.id
+
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": f"Swapped {old_name} for {new_product.name}.",
+        "build_id": build.id
+    })
+
+@api.route("/recommendation", methods=["POST"])
+def recommendation_api():
+
+    data = request.get_json() or {}
+
+    usage = data.get("usage")
+    budget = data.get("budget")
+
+    if not usage:
+        return jsonify({
+            "success": False,
+            "message": "Usage is required."
+        }), 400
+
+    try:
+        budget = float(budget)
+    except (TypeError, ValueError):
+        return jsonify({
+            "success": False,
+            "message": "Budget must be a valid number."
+        }), 400
+
+    result = recommend_components(usage, budget)
+
+    return jsonify(
+        make_json_safe(result)
+    )

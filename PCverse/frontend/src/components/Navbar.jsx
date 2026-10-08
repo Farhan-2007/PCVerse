@@ -55,7 +55,7 @@ function Navbar() {
                         Home
                     </a>
 
-                    <a href="/" className="hover:text-emerald-400">
+                    <a href="/products" className="hover:text-emerald-400">
                         Products
                     </a>
 
@@ -66,7 +66,7 @@ function Navbar() {
                         My Builds
                     </a>
 
-                    <a href="#" className="hover:text-emerald-400">
+                    <a href="/recommendation" className="hover:text-emerald-400">
                         Recommendations
                     </a>
 

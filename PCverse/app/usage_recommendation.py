@@ -286,5 +286,5 @@ def get_usage_recommendation(build, usage):
             else "General Use"
         ),
         "status": status,
-        "message": message
+        "message": message  
     }

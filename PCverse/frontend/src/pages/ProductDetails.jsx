@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getProduct } from "../services/api"
+import { getProduct, addComponent } from "../services/api"
 
 
 function ProductDetails({ productId, onBack }) {
@@ -7,6 +7,14 @@ function ProductDetails({ productId, onBack }) {
     const [product, setProduct] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
+
+    const [adding, setAdding] = useState(false)
+    const [actionMessage, setActionMessage] = useState("")
+    const [actionError, setActionError] = useState("")
+
+    const buildId = new URLSearchParams(
+        window.location.search
+    ).get("build_id")
 
 
     useEffect(() => {
@@ -25,41 +33,102 @@ function ProductDetails({ productId, onBack }) {
     }, [productId])
 
 
+    async function handleAddToBuild() {
+
+        if (!buildId) {
+            return
+        }
+
+        try {
+
+            setAdding(true)
+            setActionMessage("")
+            setActionError("")
+
+            await addComponent(buildId, product.id)
+
+            setActionMessage(
+                `${product.name} was added to your build.`
+            )
+
+        } catch (error) {
+
+            setActionError(error.message)
+
+        } finally {
+
+            setAdding(false)
+
+        }
+    }
+
+
     if (loading) {
+
         return (
             <section className="mx-auto max-w-7xl px-6 py-20">
-                <p className="text-zinc-400">
-                    Loading product...
-                </p>
+
+                <div className="animate-pulse">
+
+                    <div className="h-5 w-32 rounded bg-zinc-800"></div>
+
+                    <div className="mt-8 grid gap-10 lg:grid-cols-2">
+
+                        <div className="h-[450px] rounded-2xl bg-zinc-900"></div>
+
+                        <div>
+
+                            <div className="h-4 w-24 rounded bg-zinc-800"></div>
+
+                            <div className="mt-4 h-10 w-3/4 rounded bg-zinc-800"></div>
+
+                            <div className="mt-6 h-8 w-32 rounded bg-zinc-800"></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
             </section>
         )
     }
 
 
     if (error) {
+
         return (
             <section className="mx-auto max-w-7xl px-6 py-20">
-                <p className="text-red-400">
-                    {error}
-                </p>
+
+                <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-5">
+
+                    <p className="text-red-400">
+                        {error}
+                    </p>
+
+                </div>
 
                 <button
                     onClick={onBack}
-                    className="mt-6 rounded-lg border border-zinc-700 px-4 py-2 text-sm hover:border-emerald-500"
+                    className="mt-6 rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition hover:border-emerald-500 hover:text-emerald-400"
                 >
                     ← Back to Products
                 </button>
+
             </section>
         )
     }
 
 
     return (
-        <section className="mx-auto max-w-7xl px-6 py-16">
+
+        <section className="mx-auto max-w-7xl px-6 py-12 lg:py-16">
+
+            {/* Back Button */}
 
             <button
                 onClick={onBack}
-                className="mb-8 text-sm text-zinc-400 transition hover:text-emerald-400"
+                className="mb-8 text-sm font-medium text-zinc-400 transition hover:text-emerald-400"
             >
                 ← Back to Products
             </button>
@@ -67,72 +136,175 @@ function ProductDetails({ productId, onBack }) {
 
             <div className="grid gap-10 lg:grid-cols-2">
 
-                {/* Product image */}
 
-                <div className="flex min-h-[400px] items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 p-8">
+                {/* Product Image */}
+
+                <div className="flex min-h-[450px] items-center justify-center overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 p-8">
 
                     {product.image_file ? (
+
                         <img
-                            src={`http://127.0.0.1:5000/static/product_pics/${product.image_file}`}
+                            src={`http://localhost:5000/static/product_pics/${product.image_file}`}
                             alt={product.name}
-                            className="max-h-[400px] w-full object-contain"
+                            className="max-h-[420px] w-full object-contain transition duration-300 hover:scale-105"
                         />
+
                     ) : (
-                        <span className="text-zinc-600">
-                            PC Component
-                        </span>
+
+                        <div className="flex h-full min-h-[350px] items-center justify-center">
+
+                            <span className="text-zinc-600">
+                                No product image
+                            </span>
+
+                        </div>
+
                     )}
 
                 </div>
 
 
-                {/* Product information */}
+                {/* Product Information */}
 
                 <div>
 
-                    <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
+                    {/* Brand */}
+
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">
                         {product.brand}
                     </p>
 
-                    <h1 className="mt-3 text-4xl font-bold">
+
+                    {/* Product Name */}
+
+                    <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-100">
                         {product.name}
                     </h1>
 
-                    <p className="mt-6 text-3xl font-bold">
-                        ₹{product.price}
-                    </p>
 
+                    {/* Price */}
 
-                    <p className="mt-4 text-sm text-zinc-400">
-                        {product.stock > 0
-                            ? `${product.stock} in stock`
-                            : "Out of stock"
-                        }
-                    </p>
+                    <div className="mt-6">
 
-
-                    <div className="mt-8 border-t border-zinc-800 pt-8">
-
-                        <h2 className="text-xl font-semibold">
-                            Description
-                        </h2>
-
-                        <p className="mt-4 leading-7 text-zinc-400">
-                            {product.description || "No description available."}
+                        <p className="text-3xl font-bold text-zinc-100">
+                            ₹{Number(product.price).toLocaleString("en-IN")}
                         </p>
 
                     </div>
 
 
+                    {/* Stock */}
+
+                    <div className="mt-4">
+
+                        {product.stock > 0 ? (
+
+                            <span className="inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-400">
+                                ✓ {product.stock} in stock
+                            </span>
+
+                        ) : (
+
+                            <span className="inline-flex rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-sm font-medium text-red-400">
+                                Out of stock
+                            </span>
+
+                        )}
+
+                    </div>
+
+
+                    {/* Add To Build */}
+
+                    {buildId && (
+
+                        <div className="mt-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+
+                            <p className="text-sm text-zinc-400">
+                                Adding to your current build
+                            </p>
+
+                            <button
+                                onClick={handleAddToBuild}
+                                disabled={
+                                    adding ||
+                                    product.stock <= 0
+                                }
+                                className="mt-4 w-full rounded-xl bg-emerald-500 px-5 py-3.5 font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {adding
+                                    ? "Adding..."
+                                    : "＋ Add to Build"
+                                }
+                            </button>
+
+                        </div>
+
+                    )}
+
+
+                    {/* Success Message */}
+
+                    {actionMessage && (
+
+                        <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+
+                            <p className="text-sm text-emerald-400">
+                                ✓ {actionMessage}
+                            </p>
+
+                        </div>
+
+                    )}
+
+
+                    {/* Action Error */}
+
+                    {actionError && (
+
+                        <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+
+                            <p className="text-sm text-red-400">
+                                {actionError}
+                            </p>
+
+                        </div>
+
+                    )}
+
+
+                    {/* Description */}
+
+                    <div className="mt-10 border-t border-zinc-800 pt-8">
+
+                        <h2 className="text-xl font-semibold text-zinc-100">
+                            Description
+                        </h2>
+
+                        <p className="mt-4 leading-7 text-zinc-400">
+                            {product.description ||
+                                "No description available."}
+                        </p>
+
+                    </div>
+
+
+                    {/* Specifications */}
+
                     <div className="mt-8 border-t border-zinc-800 pt-8">
 
-                        <h2 className="text-xl font-semibold">
+                        <h2 className="text-xl font-semibold text-zinc-100">
                             Specifications
                         </h2>
 
-                        <p className="mt-4 whitespace-pre-line leading-7 text-zinc-400">
-                            {product.specification || "No specifications available."}
-                        </p>
+                        <div className="mt-4 rounded-xl bg-zinc-900 p-5">
+
+                            <p className="whitespace-pre-line leading-7 text-zinc-400">
+                                {product.specification ||
+                                    "No specifications available."}
+                            </p>
+
+                        </div>
 
                     </div>
 
