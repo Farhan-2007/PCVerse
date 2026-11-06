@@ -5,11 +5,13 @@ import { getCurrentUser, logout } from "../services/api"
 function Navbar() {
 
     const [user, setUser] = useState(null)
+    const [logoutError, setLogoutError] = useState("")
 
     async function handleLogout() {
 
         try {
 
+            setLogoutError("")
             await logout()
 
             setUser(null)
@@ -17,6 +19,7 @@ function Navbar() {
         } catch (error) {
 
             console.error("Logout failed:", error)
+            setLogoutError(error.message)
 
         }
     }
@@ -39,14 +42,14 @@ function Navbar() {
     return (
         <nav className="border-b border-zinc-800">
 
-            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+            <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-5">
 
-                <h1 className="text-2xl font-bold">
+                <a href="/" className="text-2xl font-bold" aria-label="PCVerse home">
                     PC<span className="text-emerald-400">Verse</span>
-                </h1>
+                </a>
 
 
-                <div className="flex items-center gap-6 text-sm text-zinc-300">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-zinc-300">
 
                     <a
                         href="/"
@@ -57,6 +60,10 @@ function Navbar() {
 
                     <a href="/products" className="hover:text-emerald-400">
                         Products
+                    </a>
+
+                    <a href="/create-build" className="hover:text-emerald-400">
+                        Build My PC
                     </a>
 
                     <a
@@ -94,7 +101,6 @@ function Navbar() {
                         <>
                             <a
                                 href="/login"
-                                target="_self"
                                 className="hover:text-emerald-400"
                             >
                                 Login
@@ -102,7 +108,6 @@ function Navbar() {
 
                             <a
                                 href="/signup"
-                                target="_self"
                                 className="rounded-lg bg-emerald-500 px-4 py-2 font-medium text-zinc-950 transition hover:bg-emerald-400"
                             >
                                 Sign Up
@@ -114,6 +119,12 @@ function Navbar() {
                 </div>
 
             </div>
+
+            {logoutError && (
+                <p className="mx-auto max-w-7xl px-6 pb-3 text-sm text-red-400" role="alert">
+                    {logoutError}
+                </p>
+            )}
 
         </nav>
     )

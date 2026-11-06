@@ -42,6 +42,7 @@ def swap_options(build, item, candidates):
     other_products = [
         other.product for other in build.items if other.id != item.id
     ]
+    current_power = calculate_build_power(build)
 
     options = []
 
@@ -53,20 +54,36 @@ def swap_options(build, item, candidates):
         issues = [
             result["message"]
             for result in compatibility["results"]
-            if not result["compatible"]
+            if result["compatible"] is False
+            and category in result.get("pair", ())
+        ]
+        unknown_checks = [
+            result["message"]
+            for result in compatibility["results"]
+            if result["compatible"] is None
             and category in result.get("pair", ())
         ]
 
         power = calculate_build_power(virtual)
 
-        # "No PSU yet" is not a problem caused by the swap
-        power_ok = power["selected_psu"] is None or power["psu_compatible"]
+        power_ok = (
+            power["selected_psu"] is None
+            or power["psu_compatible"]
+            or (
+                current_power["selected_psu"] is not None
+                and not current_power["psu_compatible"]
+                and power["recommended_psu"]
+                <= current_power["recommended_psu"]
+            )
+        )
 
         options.append({
             "product": candidate,
             "price_difference": candidate.price - item.product.price,
             "compatible": not issues,
+            "verification": "unknown" if unknown_checks else "verified",
             "issues": issues,
+            "unknown_checks": unknown_checks,
             "power_ok": power_ok,
             "total_power": power["total_power"],
         })

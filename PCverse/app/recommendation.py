@@ -1,14 +1,13 @@
-from app import db
+import math
+
 from app.models import Product
 from app.specification_parser import parse_specification
+from app.build_tools import make_virtual_build
+from app.compatibility import check_build_compatibility
+from app.power_calculator import calculate_build_power
 
 from app.compatibility import (
-    check_cpu_motherboard,
-    check_motherboard_ram,
-    check_cpu_cooler,
-    check_gpu_psu,
-    check_gpu_motherboard,
-    check_gpu_cabinet
+    check_cpu_motherboard
 )
 
 USAGE_PROFILES = {
@@ -263,63 +262,19 @@ def is_product_compatible(product, selected_products):
     that have already been selected.
     """
 
-    category = product.category.name
+    products = dict(selected_products)
+    products[product.category.name] = product
+    virtual_build = make_virtual_build(list(products.values()))
+    compatibility = check_build_compatibility(virtual_build)
 
-    cpu = selected_products.get("CPU")
-    gpu = selected_products.get("GPU")
-    motherboard = selected_products.get("Motherboard")
-    ram = selected_products.get("RAM")
-    psu = selected_products.get("Power Supply")
-    cooler = selected_products.get("CPU Cooler")
-    cabinet = selected_products.get("Cabinet")
+    if any(
+        result["compatible"] is False
+        for result in compatibility["results"]
+    ):
+        return False
 
-    checks = []
-
-    if category == "Motherboard" and cpu:
-        checks.append(
-            check_cpu_motherboard(cpu, product)
-        )
-
-    elif category == "RAM" and motherboard:
-        checks.append(
-            check_motherboard_ram(motherboard, product)
-        )
-
-    elif category == "CPU Cooler" and cpu:
-        checks.append(
-            check_cpu_cooler(cpu, product)
-        )
-
-    elif category == "Power Supply" and gpu:
-        checks.append(
-            check_gpu_psu(gpu, product)
-        )
-
-    elif category == "GPU":
-        if motherboard:
-            checks.append(
-                check_gpu_motherboard(product, motherboard)
-            )
-
-        if psu:
-            checks.append(
-                check_gpu_psu(product, psu)
-            )
-
-        if cabinet:
-            checks.append(
-                check_gpu_cabinet(product, cabinet)
-            )
-
-    elif category == "Cabinet" and gpu:
-        checks.append(
-            check_gpu_cabinet(gpu, product)
-        )
-
-    return all(
-        result["compatible"]
-        for result in checks
-    )
+    power = calculate_build_power(virtual_build)
+    return not power["selected_psu"] or power["psu_compatible"]
 
 def upgrade_components(
     recommendations,
@@ -399,6 +354,10 @@ def upgrade_components(
                 if product.price > current_product.price
                 and product.price - current_product.price
                 <= remaining_budget
+                and is_product_compatible(
+                    product,
+                    recommendations
+                )
             ]
 
             if not candidates:
@@ -499,13 +458,6 @@ def choose_components(profile, optional, available, budget):
         if category not in optional
     )
 
-    print("CHEAPEST PRODUCTS:")
-
-    for category, price in cheapest.items():
-        print(category, price)
-
-    print("MINIMUM BUDGET:", minimum_budget)
-
     # The budget cannot build a complete PC.
     if budget < minimum_budget:
 
@@ -522,24 +474,6 @@ def choose_components(profile, optional, available, budget):
     categories = list(profile)
 
     percent_left = sum(profile.values())
-
-    print("AVAILABLE CPUS:")
-
-    for cpu in available.get("CPU", []):    
-
-        print(
-            cpu.name,
-            cpu.specification
-        )
-
-    print("AVAILABLE MOTHERBOARDS:")
-
-    for motherboard in available.get("Motherboard", []):
-
-        print(
-            motherboard.name,
-            motherboard.specification
-        )
 
     for index, category in enumerate(categories):
 
@@ -566,8 +500,6 @@ def choose_components(profile, optional, available, budget):
 
             for cpu in available["CPU"]:
 
-                print("TESTING CPU:", cpu.name)
-
                 for motherboard in available.get("Motherboard", []):
 
                     result = check_cpu_motherboard(
@@ -575,21 +507,9 @@ def choose_components(profile, optional, available, budget):
                         motherboard
                     )
 
-                    print(
-                        "  WITH MOTHERBOARD:",
-                        motherboard.name,
-                        "=>",
-                        result
-                    )
-
-                    if result["compatible"]:
+                    if result["compatible"] is not False:
                         compatible_cpus.append(cpu)
                         break
-
-            print(
-                "COMPATIBLE CPUS:",
-                [cpu.name for cpu in compatible_cpus]
-            )
 
             if not compatible_cpus:
                 return {}, minimum_budget
@@ -656,21 +576,7 @@ def choose_components(profile, optional, available, budget):
             picked[category] = best_product
             remaining -= best_product.price
 
-            print(
-                "SELECTED:",
-                category,
-                best_product.name,
-                best_product.price
-            )
-
         else:
-
-            print(
-                "NO PRODUCT FOR:",
-                category,
-                "SPEND LIMIT:",
-                spend_limit
-            )
 
             compatible_products = [
                 product
@@ -696,11 +602,6 @@ def choose_components(profile, optional, available, budget):
 
             else:
 
-                print(
-                    "FAILED:",
-                    category
-                )
-
                 return picked, minimum_budget
 
     return picked, minimum_budget
@@ -708,6 +609,13 @@ def choose_components(profile, optional, available, budget):
         # Pick the best product from the affordable options.
 
 def recommend_components(usage, budget):
+
+    if not isinstance(usage, str):
+        return {
+            "success": False,
+            "message": "Invalid usage selected.",
+            "recommendations": {}
+        }
 
     usage = usage.lower().strip()
 
@@ -727,7 +635,7 @@ def recommend_components(usage, budget):
     # Validate budget
     # ---------------------------------------------------------
 
-    if budget <= 0:
+    if not isinstance(budget, (int, float)) or not math.isfinite(budget) or budget <= 0:
 
         return {
             "success": False,
@@ -813,6 +721,21 @@ def recommend_components(usage, budget):
             "recommendations": {}
         }
 
+    required_categories = set(profile) - set(optional)
+    missing_categories = sorted(
+        required_categories - recommendations.keys()
+    )
+    if missing_categories:
+        return {
+            "success": False,
+            "message": (
+                "A complete compatible build could not be selected. "
+                "No suitable in-stock option was found for: "
+                + ", ".join(missing_categories)
+            ),
+            "recommendations": {}
+        }
+
     # ---------------------------------------------------------
     # Calculate final price
     # ---------------------------------------------------------
@@ -838,6 +761,35 @@ def recommend_components(usage, budget):
         for product in recommendations.values()
 )
 
+    if total_estimated_price > budget:
+        return {
+            "success": False,
+            "message": "The selected components exceed the requested budget.",
+            "recommendations": {}
+        }
+
+    compatibility = check_build_compatibility(
+        make_virtual_build(list(recommendations.values()))
+    )
+    power = calculate_build_power(
+        make_virtual_build(list(recommendations.values()))
+    )
+    if (
+        any(
+            result["compatible"] is False
+            for result in compatibility["results"]
+        )
+        or (
+            power["selected_psu"]
+            and not power["psu_compatible"]
+        )
+    ):
+        return {
+            "success": False,
+            "message": "A fully compatible build could not be selected within this budget.",
+            "recommendations": {}
+        }
+
     # ---------------------------------------------------------
     # Return successful recommendation
     # ---------------------------------------------------------
@@ -859,5 +811,7 @@ def recommend_components(usage, budget):
         "total_estimated_price": total_estimated_price,
         "remaining_budget": remaining_budget,
         "recommendations": recommendations,
-        "reasons": reasons
+        "reasons": reasons,
+        "compatibility": compatibility,
+        "power": power
     }

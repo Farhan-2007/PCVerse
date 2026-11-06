@@ -20,6 +20,9 @@ function BuildDetails() {
     const [swapOptions, setSwapOptions] = useState([])
     const [swapLoading, setSwapLoading] = useState(false)
     const [swapError, setSwapError] = useState("")
+    const [removingItemId, setRemovingItemId] = useState(null)
+    const [deletingBuild, setDeletingBuild] = useState(false)
+    const [statusMessage, setStatusMessage] = useState("")
 
 
     useEffect(() => {
@@ -34,17 +37,29 @@ function BuildDetails() {
 
     async function handleRemoveComponent(itemId) {
 
+        if (removingItemId !== null) {
+            return
+        }
+
         try {
 
+            setRemovingItemId(itemId)
+            setError("")
+            setStatusMessage("")
             await removeComponent(buildId, itemId)
 
             const updatedBuild = await getBuild(buildId)
 
             setBuild(updatedBuild)
+            setStatusMessage("Component removed from the build.")
 
         } catch (error) {
 
             setError(error.message)
+
+        } finally {
+
+            setRemovingItemId(null)
 
         }
     }
@@ -60,8 +75,14 @@ function BuildDetails() {
             return
         }
 
+        if (deletingBuild) {
+            return
+        }
+
         try {
 
+            setDeletingBuild(true)
+            setError("")
             await deleteBuild(buildId)
 
             window.location.href = "/my-builds"
@@ -69,6 +90,8 @@ function BuildDetails() {
         } catch (error) {
 
             setError(error.message)
+
+            setDeletingBuild(false)
 
         }
     }
@@ -108,6 +131,7 @@ function BuildDetails() {
 
             setSwapLoading(true)
             setSwapError("")
+            setStatusMessage("")
 
             await applySwap(
                 buildId,
@@ -118,6 +142,7 @@ function BuildDetails() {
             const updatedBuild = await getBuild(buildId)
 
             setBuild(updatedBuild)
+            setStatusMessage("Component swapped successfully.")
 
             setSwapItem(null)
             setSwapOptions([])
@@ -125,6 +150,36 @@ function BuildDetails() {
         } catch (error) {
 
             setSwapError(error.message)
+
+        } finally {
+
+            setSwapLoading(false)
+
+        }
+    }
+
+    async function handleApplyUpgrade(suggestion) {
+
+        try {
+
+            setSwapLoading(true)
+            setSwapError("")
+            setError("")
+            setStatusMessage("")
+
+            await applySwap(
+                buildId,
+                suggestion.build_item_id,
+                suggestion.upgrade.id
+            )
+
+            const updatedBuild = await getBuild(buildId)
+            setBuild(updatedBuild)
+            setStatusMessage("Upgrade applied successfully.")
+
+        } catch (error) {
+
+            setError(error.message)
 
         } finally {
 
@@ -184,6 +239,12 @@ function BuildDetails() {
         )
     }
 
+    const compatibility = build.compatibility ?? null
+    const power = build.power ?? null
+    const upgradeSuggestions = Array.isArray(build.upgrade_suggestions)
+        ? build.upgrade_suggestions
+        : null
+
 
     return (
 
@@ -202,6 +263,14 @@ function BuildDetails() {
 
                 </div>
 
+            )}
+
+            {statusMessage && (
+                <div className="mb-8 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4">
+                    <p className="text-sm text-emerald-400" role="status">
+                        {statusMessage}
+                    </p>
+                </div>
             )}
 
 
@@ -245,12 +314,19 @@ function BuildDetails() {
 
                         </div>
 
+                        <a
+                            href={`/products?build_id=${build.id}`}
+                            className="rounded-xl bg-emerald-500 px-5 py-3 text-center text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400"
+                        >
+                            + Add Components
+                        </a>
 
                         <button
                             onClick={handleDeleteBuild}
+                            disabled={deletingBuild}
                             className="rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-3 text-sm font-semibold text-red-400 transition hover:border-red-500/50 hover:bg-red-500/20"
                         >
-                            Delete Build
+                            {deletingBuild ? "Deleting..." : "Delete Build"}
                         </button>
 
                     </div>
@@ -368,9 +444,12 @@ function BuildDetails() {
 
                                         <button
                                             onClick={() => handleRemoveComponent(item.id)}
+                                            disabled={removingItemId !== null}
                                             className="flex-1 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm font-medium text-red-400 transition hover:bg-red-500/20"
                                         >
-                                            Remove
+                                            {removingItemId === item.id
+                                                ? "Removing..."
+                                                : "Remove"}
                                         </button>
 
                                     </div>
@@ -391,7 +470,7 @@ function BuildDetails() {
                                                     </p>
 
                                                     <p className="mt-1 text-xs text-zinc-500">
-                                                        Compatible {item.category} options
+                                                        {item.category} alternatives
                                                     </p>
 
                                                 </div>
@@ -473,12 +552,47 @@ function BuildDetails() {
                                                                             ).toLocaleString("en-IN")}
                                                                         </p>
 
+                                                                        <p className={`mt-2 text-xs ${
+                                                                            option.compatible && option.power_ok
+                                                                                    && option.verification !== "unknown"
+                                                                                    ? "text-emerald-400"
+                                                                                : "text-amber-400"
+                                                                        }`}>
+                                                                                {option.compatible && option.power_ok
+                                                                                    ? option.verification === "unknown"
+                                                                                        ? "No known issue; compatibility is not fully verified"
+                                                                                        : "Compatible with current build"
+                                                                                    : "Compatibility or power issue"}
+                                                                        </p>
+
+                                                                        {option.issues?.map(issue => (
+                                                                            <p
+                                                                                key={issue}
+                                                                                className="mt-1 text-xs text-red-400"
+                                                                            >
+                                                                                {issue}
+                                                                            </p>
+                                                                        ))}
+
+                                                                        {option.unknown_checks?.map(check => (
+                                                                            <p
+                                                                                key={check}
+                                                                                className="mt-1 text-xs text-amber-300"
+                                                                            >
+                                                                                {check}
+                                                                            </p>
+                                                                        ))}
+
                                                                     </div>
 
 
                                                                     <button
                                                                         onClick={() => handleChooseSwap(item, option)}
-                                                                        disabled={swapLoading}
+                                                                        disabled={
+                                                                            swapLoading ||
+                                                                            !option.compatible ||
+                                                                            !option.power_ok
+                                                                        }
                                                                         className="shrink-0 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
                                                                     >
                                                                         {swapLoading
@@ -527,9 +641,11 @@ function BuildDetails() {
                         </p>
 
                         <h2 className="mt-2 text-xl font-semibold text-zinc-100">
-                            {build.compatibility.compatible
+                            {compatibility?.compatible === true
                                 ? "All components are compatible"
-                                : "Compatibility issues found"
+                                : compatibility?.compatible === false
+                                    ? "Compatibility issues found"
+                                    : "Compatibility analysis unavailable"
                             }
                         </h2>
 
@@ -538,14 +654,18 @@ function BuildDetails() {
 
                     <span
                         className={`w-fit rounded-full px-3 py-1 text-sm font-medium ${
-                            build.compatibility.compatible
+                            compatibility?.compatible === true
                                 ? "bg-emerald-500/10 text-emerald-400"
-                                : "bg-red-500/10 text-red-400"
+                                : compatibility?.compatible === false
+                                    ? "bg-red-500/10 text-red-400"
+                                    : "bg-yellow-500/10 text-yellow-400"
                         }`}
                     >
-                        {build.compatibility.compatible
+                        {compatibility?.compatible === true
                             ? "✓ Compatible"
-                            : "! Issues Found"
+                            : compatibility?.compatible === false
+                                ? "! Issues Found"
+                                : "Unknown"
                         }
                     </span>
 
@@ -553,13 +673,13 @@ function BuildDetails() {
 
 
                 <p className="mt-4 leading-6 text-zinc-400">
-                    {build.compatibility.message}
+                    {compatibility?.message ?? "Compatibility analysis is unavailable."}
                 </p>
 
 
                 <div className="mt-6 space-y-3">
 
-                    {build.compatibility.results.map(
+                    {(compatibility?.results ?? []).map(
                         (result, index) => (
 
                             <div
@@ -571,12 +691,18 @@ function BuildDetails() {
 
                                     <span
                                         className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm ${
-                                            result.compatible
+                                            result.compatible === true
                                                 ? "bg-emerald-500/10 text-emerald-400"
-                                                : "bg-red-500/10 text-red-400"
+                                                : result.compatible === false
+                                                    ? "bg-red-500/10 text-red-400"
+                                                    : "bg-amber-500/10 text-amber-400"
                                         }`}
                                     >
-                                        {result.compatible ? "✓" : "!"}
+                                        {result.compatible === true
+                                            ? "✓"
+                                            : result.compatible === false
+                                                ? "!"
+                                                : "?"}
                                     </span>
 
                                     <p className="text-sm leading-6 text-zinc-300">
@@ -608,9 +734,11 @@ function BuildDetails() {
                         </p>
 
                         <h2 className="mt-2 text-xl font-semibold text-zinc-100">
-                            {build.power.psu_compatible
+                            {power?.psu_compatible === true
                                 ? "Power supply is sufficient"
-                                : "Power supply may be insufficient"
+                                : power?.psu_compatible === false
+                                    ? "Power supply may be insufficient"
+                                    : "Power analysis unavailable"
                             }
                         </h2>
 
@@ -619,14 +747,18 @@ function BuildDetails() {
 
                     <span
                         className={`w-fit rounded-full px-3 py-1 text-sm font-medium ${
-                            build.power.psu_compatible
+                            power?.psu_compatible === true
                                 ? "bg-emerald-500/10 text-emerald-400"
-                                : "bg-red-500/10 text-red-400"
+                                : power?.psu_compatible === false
+                                    ? "bg-red-500/10 text-red-400"
+                                    : "bg-yellow-500/10 text-yellow-400"
                         }`}
                     >
-                        {build.power.psu_compatible
+                        {power?.psu_compatible === true
                             ? "✓ PSU Compatible"
-                            : "! PSU Issue"
+                            : power?.psu_compatible === false
+                                ? "! PSU Issue"
+                                : "Unknown"
                         }
                     </span>
 
@@ -634,7 +766,7 @@ function BuildDetails() {
 
 
                 <p className="mt-4 leading-6 text-zinc-400">
-                    {build.power.psu_status}
+                    {power?.psu_status ?? "Power analysis is unavailable."}
                 </p>
 
 
@@ -649,7 +781,7 @@ function BuildDetails() {
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold text-zinc-100">
-                            {build.power.total_power}W
+                            {power?.total_power ?? "—"}{power?.total_power != null ? "W" : ""}
                         </p>
 
                     </div>
@@ -662,7 +794,7 @@ function BuildDetails() {
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold text-zinc-100">
-                            {build.power.psu_wattage}W
+                            {power?.psu_wattage ?? "—"}{power?.psu_wattage != null ? "W" : ""}
                         </p>
 
                     </div>
@@ -675,7 +807,7 @@ function BuildDetails() {
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold text-emerald-400">
-                            {build.power.headroom}W
+                            {power?.headroom ?? "—"}{power?.headroom != null ? "W" : ""}
                         </p>
 
                     </div>
@@ -688,7 +820,7 @@ function BuildDetails() {
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold text-zinc-100">
-                            {build.power.recommended_psu}W
+                            {power?.recommended_psu ?? "—"}{power?.recommended_psu != null ? "W" : ""}
                         </p>
 
                     </div>
@@ -698,7 +830,7 @@ function BuildDetails() {
 
                 {/* Selected PSU */}
 
-                {build.power.selected_psu && (
+                {power?.selected_psu && (
 
                     <div className="mt-6 rounded-xl border border-zinc-800 bg-zinc-950 p-5">
 
@@ -712,8 +844,8 @@ function BuildDetails() {
                             <div className="h-20 w-20 shrink-0 rounded-lg bg-zinc-900 p-2">
 
                                 <img
-                                    src={`http://localhost:5000/static/product_pics/${build.power.selected_psu.image_file}`}
-                                    alt={build.power.selected_psu.name}
+                                    src={`http://localhost:5000/static/product_pics/${power.selected_psu.image_file}`}
+                                    alt={power.selected_psu.name}
                                     className="h-full w-full object-contain"
                                 />
 
@@ -723,16 +855,16 @@ function BuildDetails() {
                             <div className="min-w-0">
 
                                 <h3 className="font-semibold text-zinc-200">
-                                    {build.power.selected_psu.name}
+                                    {power.selected_psu.name}
                                 </h3>
 
                                 <p className="mt-1 text-sm text-zinc-500">
-                                    {build.power.selected_psu.brand}
+                                    {power.selected_psu.brand}
                                 </p>
 
                                 <p className="mt-2 font-semibold text-emerald-400">
                                     ₹{Number(
-                                        build.power.selected_psu.price
+                                        power.selected_psu.price
                                     ).toLocaleString("en-IN")}
                                 </p>
 
@@ -747,8 +879,8 @@ function BuildDetails() {
 
                 {/* Recommended PSU Options */}
 
-                {build.power.recommended_options &&
-                    build.power.recommended_options.length > 0 && (
+                {power?.recommended_options &&
+                    power.recommended_options.length > 0 && (
 
                         <div className="mt-6">
 
@@ -758,7 +890,7 @@ function BuildDetails() {
 
                             <div className="mt-3 flex flex-wrap gap-2">
 
-                                {build.power.recommended_options.map(
+                                {power.recommended_options.map(
                                     wattage => (
 
                                         <span
@@ -801,12 +933,12 @@ function BuildDetails() {
 
                     <span
                         className={`w-fit rounded-full px-3 py-1 text-sm font-medium ${
-                            build.performance.status === "balanced"
+                            build.performance?.status === "balanced"
                                 ? "bg-emerald-500/10 text-emerald-400"
                                 : "bg-yellow-500/10 text-yellow-400"
                         }`}
                     >
-                        {build.performance.status}
+                        {build.performance?.status ?? "Awaiting components"}
                     </span>
 
                 </div>
@@ -821,7 +953,8 @@ function BuildDetails() {
                         </span>
 
                         <p className="text-sm leading-6 text-zinc-300">
-                            {build.performance.message}
+                            {build.performance?.message ??
+                                "Add a CPU and GPU to see performance analysis."}
                         </p>
 
                     </div>
@@ -844,7 +977,11 @@ function BuildDetails() {
                 </h2>
 
 
-                {build.upgrade_suggestions.length === 0 ? (
+                {upgradeSuggestions === null ? (
+                    <div className="mt-6 rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-5 text-sm text-yellow-300">
+                        Upgrade analysis is unavailable.
+                    </div>
+                ) : upgradeSuggestions.length === 0 ? (
 
                     <div className="mt-6 rounded-xl border border-zinc-800 bg-zinc-950 p-5">
 
@@ -874,7 +1011,7 @@ function BuildDetails() {
 
                     <div className="mt-6 space-y-3">
 
-                        {build.upgrade_suggestions.map(
+                        {upgradeSuggestions.map(
                             (suggestion, index) => (
 
                                 <div
@@ -882,12 +1019,33 @@ function BuildDetails() {
                                     className="rounded-xl border border-zinc-800 bg-zinc-950 p-5"
                                 >
 
-                                    <p className="text-sm leading-6 text-zinc-300">
-                                        {typeof suggestion === "string"
-                                            ? suggestion
-                                            : JSON.stringify(suggestion)
-                                        }
-                                    </p>
+                                    {typeof suggestion === "string" ? (
+                                        <p className="text-sm leading-6 text-zinc-300">
+                                            {suggestion}
+                                        </p>
+                                    ) : (
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <p className="font-semibold text-zinc-100">
+                                                    Upgrade {suggestion.category}
+                                                </p>
+                                                <p className="mt-1 text-sm text-zinc-400">
+                                                    {suggestion.current?.name} → {suggestion.upgrade?.name}
+                                                </p>
+                                                <p className="mt-1 text-sm text-zinc-500">
+                                                    Additional cost: ₹{Number(suggestion.additional_cost).toLocaleString("en-IN")}
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleApplyUpgrade(suggestion)}
+                                                disabled={swapLoading}
+                                                className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                {swapLoading ? "Applying..." : "Apply Upgrade"}
+                                            </button>
+                                        </div>
+                                    )}
 
                                 </div>
 

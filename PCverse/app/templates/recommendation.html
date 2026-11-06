@@ -18,6 +18,7 @@
         </div>
 
         <form method="POST" class="recommendation-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <!-- USAGE -->
 
@@ -313,6 +314,7 @@
                 {% if current_user.is_authenticated %}
 
                 <form method="POST" action="{{ url_for('main.create_build_from_recommendation') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <input type="hidden" name="usage" value="{{ recommendation_result.usage }}">
 

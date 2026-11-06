@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import Products from "./pages/Products"
 import Navbar from "./components/Navbar"
 import Hero from "./components/Hero"
@@ -10,24 +9,7 @@ import BuildDetails from "./pages/BuildDetails"
 import CreateBuild from "./pages/CreateBuild"
 import Recommendation from "./pages/Recommendation"
 
-import { getProducts } from "./services/api"
-
-
 function App() {
-
-  const [products, setProducts] = useState([])
-
-  useEffect(() => {
-
-    getProducts()
-      .then(data => {
-        setProducts(data)
-      })
-      .catch(error => {
-        console.error("Error loading products:", error)
-      })
-
-  }, [])
 
   if (window.location.pathname === "/login") {
     return (
@@ -101,24 +83,6 @@ if (window.location.pathname === "/recommendation") {
       <Hero />
 
       <Features />
-
-      <Products />
-
-      <section className="mx-auto max-w-7xl px-6 py-20">
-
-        <h2 className="text-2xl font-bold">
-          Products from Flask
-        </h2>
-
-        <p className="mt-2 text-zinc-400">
-          React successfully received:
-          {" "}
-          {products.length}
-          {" "}
-          products
-        </p>
-
-      </section>
 
     </div>
   )

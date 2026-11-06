@@ -79,16 +79,18 @@
         {% if compatibility_result %}
 
         <div class="compatibility-box
-            {% if compatibility_result.compatible %}
+            {% if compatibility_result.compatible is sameas true %}
                 compatible
-            {% else %}
+            {% elif compatibility_result.compatible is sameas false %}
                 incompatible
+            {% else %}
+                compatibility-unknown
             {% endif %}
         ">
 
             <div class="compatibility-header">
 
-                {% if compatibility_result.compatible %}
+                {% if compatibility_result.compatible is sameas true %}
 
                 <span class="compatibility-icon">
                     ✅
@@ -106,7 +108,7 @@
 
                 </div>
 
-                {% else %}
+                {% elif compatibility_result.compatible is sameas false %}
 
                 <span class="compatibility-icon">
                     ⚠️
@@ -122,6 +124,14 @@
                         {{ compatibility_result.message }}
                     </p>
 
+                </div>
+
+                {% else %}
+
+                <span class="compatibility-icon">ℹ️</span>
+                <div>
+                    <h3>Compatibility Not Fully Verified</h3>
+                    <p>{{ compatibility_result.message }}</p>
                 </div>
 
                 {% endif %}
@@ -140,20 +150,26 @@
                 {% for result in compatibility_result.results %}
 
                 <div class="compatibility-result
-                    {% if result.compatible %}
+                    {% if result.compatible is sameas true %}
                         result-compatible
-                    {% else %}
+                    {% elif result.compatible is sameas false %}
                         result-incompatible
+                    {% else %}
+                        result-unknown
                     {% endif %}
                 ">
 
-                    {% if result.compatible %}
+                    {% if result.compatible is sameas true %}
 
                     <span>✅</span>
 
-                    {% else %}
+                    {% elif result.compatible is sameas false %}
 
                     <span>❌</span>
+
+                    {% else %}
+
+                    <span>ℹ️</span>
 
                     {% endif %}
 
@@ -582,6 +598,7 @@
         item_id=suggestion.build_item_id,
         product_id=suggestion.upgrade.id
     ) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="view-btn">
                         🚀 Upgrade to {{ suggestion.upgrade.name }}
                     </button>
@@ -635,8 +652,10 @@
                         <a href="{{ url_for('main.swap_component', build_id=build.id, item_id=item.id) }}"
                             class="swap-link">🔁 Swap</a>
 
-                        <a href="{{ url_for('main.remove_from_build', build_id=build.id, item_id=item.id) }}"
-                            class="remove-btn">🗑 Remove</a>
+                        <form method="POST" action="{{ url_for('main.remove_from_build', build_id=build.id, item_id=item.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="remove-btn">🗑 Remove</button>
+                        </form>
 
                     </td>
 

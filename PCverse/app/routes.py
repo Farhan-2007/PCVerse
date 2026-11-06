@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
 from app.models import Product, Category, Build, BuildItem
+from app.build_tools import make_virtual_build
 from app.compatibility import check_build_compatibility
 from app.power_calculator import calculate_build_power
 from app.performance import check_cpu_gpu_performance
@@ -11,7 +12,7 @@ from app.build_tools import USAGE_LABELS, analyze_products, swap_options
 from flask import flash, abort
 from app.build_score import calculate_build_score
 from app.upgrade_suggestions import get_upgrade_suggestions
-from app.models import Build, BuildItem, Product
+from sqlalchemy import or_
 
 main = Blueprint("main", __name__)
 
@@ -19,18 +20,7 @@ main = Blueprint("main", __name__)
 
 @main.route("/")
 def home():
-
-    featured_products = (
-        Product.query
-        .order_by(Product.name.asc())
-        .limit(8)
-        .all()
-    )
-
-    return render_template(
-        "home.html",
-        products=featured_products
-    )
+    return render_template("home.html")
 
 # ALL PRODUCTS
 
@@ -42,11 +32,19 @@ def products():
         type=int
     )
 
-    products = (
-        Product.query
-        .order_by(Product.name.asc())
-        .all()
-    )
+    search = request.args.get("search", "").strip()
+    product_query = Product.query
+
+    if search:
+        pattern = f"%{search}%"
+        product_query = product_query.filter(
+            or_(
+                Product.name.ilike(pattern),
+                Product.brand.ilike(pattern)
+            )
+        )
+
+    products = product_query.order_by(Product.name.asc()).all()
 
     categories = (
         Category.query
@@ -57,6 +55,7 @@ def products():
     return render_template(
         "products.html",
         build_id=build_id,
+        search=search,
         products=products,
         categories=categories
     )
@@ -66,7 +65,7 @@ def products():
 @main.route("/product/<int:product_id>")
 def product(product_id):
 
-    product = Product.query.get_or_404(product_id)
+    product = db.get_or_404(Product, product_id)
 
     build_id = request.args.get(
         "build_id",
@@ -84,9 +83,7 @@ def product(product_id):
 @main.route("/category/<int:category_id>")
 def category_products(category_id):
 
-    category = Category.query.get_or_404(
-        category_id
-    )
+    category = db.get_or_404(Category, category_id)
 
     products = (
         Product.query
@@ -130,9 +127,11 @@ def create_build():
 
     if request.method == "POST":
 
-        build_name = request.form.get("name")
+        build_name = request.form.get("name", "").strip()
 
-        if build_name:
+        if not build_name or len(build_name) > 100:
+            flash("Enter a build name of 1 to 100 characters.", "error")
+        else:
 
             new_build = Build(
                 name=build_name,
@@ -156,9 +155,7 @@ def create_build():
 @login_required
 def build(build_id):
 
-    build = Build.query.get_or_404(
-        build_id
-    )
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
 
@@ -283,7 +280,7 @@ def build(build_id):
 @login_required
 def delete_build(build_id):
 
-    build = Build.query.get_or_404(build_id)
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
         abort(403)
@@ -298,7 +295,8 @@ def delete_build(build_id):
 # REMOVE COMPONENT FROM BUILD
 
 @main.route(
-    "/build/<int:build_id>/remove/<int:item_id>"
+    "/build/<int:build_id>/remove/<int:item_id>",
+    methods=["POST"]
 )
 @login_required
 def remove_from_build(
@@ -306,9 +304,7 @@ def remove_from_build(
     item_id
 ):
 
-    build = Build.query.get_or_404(
-        build_id
-    )
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
 
@@ -317,9 +313,7 @@ def remove_from_build(
         )
 
 
-    item = BuildItem.query.get_or_404(
-        item_id
-    )
+    item = db.get_or_404(BuildItem, item_id)
 
     if item.build_id != build.id:
 
@@ -346,7 +340,8 @@ def remove_from_build(
 # ADD COMPONENT TO BUILD
 
 @main.route(
-    "/build/<int:build_id>/add/<int:product_id>"
+    "/build/<int:build_id>/add/<int:product_id>",
+    methods=["POST"]
 )
 @login_required
 def add_to_build(
@@ -354,9 +349,7 @@ def add_to_build(
     product_id
 ):
 
-    build = Build.query.get_or_404(
-        build_id
-    )
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
 
@@ -365,9 +358,7 @@ def add_to_build(
         )
 
 
-    product = Product.query.get_or_404(
-        product_id
-    )
+    product = db.get_or_404(Product, product_id)
 
 
     existing_item = BuildItem.query.filter_by(
@@ -378,6 +369,7 @@ def add_to_build(
 
     if existing_item:
 
+        flash("This component is already in the build.", "warning")
         return redirect(
             url_for(
                 "main.build",
@@ -385,6 +377,23 @@ def add_to_build(
             )
         )
 
+    if product.stock <= 0:
+        flash("This component is out of stock.", "error")
+        return redirect(url_for("main.build", build_id=build.id))
+
+    virtual_build = make_virtual_build(
+        [item.product for item in build.items] + [product]
+    )
+    product_category = product.category.name
+    issues = [
+        result["message"]
+        for result in check_build_compatibility(virtual_build)["results"]
+        if result["compatible"] is False
+        and product_category in result.get("pair", ())
+    ]
+    if issues:
+        flash("This component is incompatible with the current build.", "error")
+        return redirect(url_for("main.build", build_id=build.id))
 
     new_item = BuildItem(
         build_id=build.id,
@@ -434,9 +443,6 @@ def recommendation():
                 usage,
                 budget
             )
-
-            print("RECOMMENDATION RESULT:")
-            print(recommendation_result)
 
     if recommendation_result and recommendation_result.get("success"):
 
@@ -519,12 +525,12 @@ def create_build_from_recommendation():
 
 def _get_owned_build_item(build_id, item_id):
 
-    build = Build.query.get_or_404(build_id)
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
         abort(403)
 
-    item = BuildItem.query.get_or_404(item_id)
+    item = db.get_or_404(BuildItem, item_id)
 
     if item.build_id != build.id:
         abort(404)
@@ -566,7 +572,7 @@ def apply_swap(build_id, item_id, product_id):
 
     build, item = _get_owned_build_item(build_id, item_id)
 
-    new_product = Product.query.get_or_404(product_id)
+    new_product = db.get_or_404(Product, product_id)
 
     # Only same-category, in-stock replacements are allowed
     if (
@@ -580,23 +586,27 @@ def apply_swap(build_id, item_id, product_id):
         return redirect(url_for("main.build", build_id=build.id))
 
     old_name = item.product.name
-
-    item.product_id = new_product.id
-    db.session.commit()
+    old_product = item.product
+    category = old_product.category.name
+    item.product = new_product
 
     issues = [
         r["message"]
         for r in check_build_compatibility(build)["results"]
-        if not r["compatible"]
+        if r["compatible"] is False
+        and category in r.get("pair", ())
     ]
 
     if issues:
+        item.product = old_product
         flash(
-            f"Swapped {old_name} for {new_product.name}, "
-            "but the build now has compatibility issues.",
-            "warning"
+            f"Cannot swap {old_name} for {new_product.name}: "
+            "the replacement is incompatible.",
+            "error"
         )
-    else:
-        flash(f"Swapped {old_name} for {new_product.name}.", "success")
+        return redirect(url_for("main.build", build_id=build.id))
+
+    db.session.commit()
+    flash(f"Swapped {old_name} for {new_product.name}.", "success")
 
     return redirect(url_for("main.build", build_id=build.id))

@@ -1,8 +1,10 @@
+import math
+
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user, login_user,logout_user
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
-from app.models import Product, Category, Build, User,BuildItem
+from app.models import Product, Category, Build, User, BuildItem
 from app import db
 
 from app.compatibility import check_build_compatibility
@@ -10,8 +12,11 @@ from app.performance import check_cpu_gpu_performance
 from app.power_calculator import calculate_build_power
 from app.usage_recommendation import get_usage_recommendation
 from app.upgrade_suggestions import get_upgrade_suggestions
-from app.build_tools import swap_options
-from app.recommendation import recommend_components
+from app.build_tools import make_virtual_build, swap_options
+from app.recommendation import (
+    USAGE_PROFILES,
+    recommend_components
+)
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -86,7 +91,7 @@ def builds():
 @api.route("/products/<int:product_id>")
 def product_detail(product_id):
 
-    product = Product.query.get_or_404(product_id)
+    product = db.get_or_404(Product, product_id)
 
     return jsonify({
         "id": product.id,
@@ -116,18 +121,20 @@ def me():
 @api.route("/login", methods=["POST"])
 def login_api():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = {}
 
     email = data.get("email")
     password = data.get("password")
 
-    if not email or not password:
+    if not isinstance(email, str) or not isinstance(password, str):
         return jsonify({
             "success": False,
             "message": "Email and password are required."
         }), 400
 
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(email=email.strip()).first()
 
     if not user or not check_password_hash(user.password, password):
         return jsonify({
@@ -155,16 +162,35 @@ def logout_api():
 @api.route("/signup", methods=["POST"])
 def signup_api():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = {}
 
     username = data.get("username")
     email = data.get("email")
     password = data.get("password")
 
-    if not username or not email or not password:
+    if (
+        not isinstance(username, str)
+        or not isinstance(email, str)
+        or not isinstance(password, str)
+        or not username.strip()
+        or not email.strip()
+        or "@" not in email
+        or any(character.isspace() for character in email)
+        or not password
+    ):
         return jsonify({
             "success": False,
             "message": "All fields are required."
+        }), 400
+    username = username.strip()
+    email = email.strip()
+
+    if len(username) > 20 or len(email) > 120 or len(password) > 1024:
+        return jsonify({
+            "success": False,
+            "message": "One or more fields exceed the allowed length."
         }), 400
 
     existing_user = User.query.filter_by(email=email).first()
@@ -238,7 +264,7 @@ def make_json_safe(value):
 @login_required
 def build_detail(build_id):
 
-    build = Build.query.get_or_404(build_id)
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
         return jsonify({
@@ -366,14 +392,21 @@ def build_detail(build_id):
 @login_required
 def create_build_api():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = {}
 
     build_name = data.get("name") if data else None
 
-    if not build_name or not build_name.strip():
+    if not isinstance(build_name, str) or not build_name.strip():
         return jsonify({
             "success": False,
             "message": "Build name is required."
+        }), 400
+    if len(build_name.strip()) > 100:
+        return jsonify({
+            "success": False,
+            "message": "Build name must be 100 characters or fewer."
         }), 400
 
     new_build = Build(
@@ -400,7 +433,7 @@ def create_build_api():
 @login_required
 def delete_build_api(build_id):
 
-    build = Build.query.get_or_404(build_id)
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
         return jsonify({
@@ -426,7 +459,7 @@ def delete_build_api(build_id):
 @login_required
 def add_component_api(build_id, product_id):
 
-    build = Build.query.get_or_404(build_id)
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
         return jsonify({
@@ -434,7 +467,7 @@ def add_component_api(build_id, product_id):
             "message": "Build not found."
         }), 404
 
-    product = Product.query.get_or_404(product_id)
+    product = db.get_or_404(Product, product_id)
 
     existing_item = BuildItem.query.filter_by(
         build_id=build.id,
@@ -445,6 +478,30 @@ def add_component_api(build_id, product_id):
         return jsonify({
             "success": False,
             "message": "This component is already in the build."
+        }), 400
+
+    if product.stock <= 0:
+        return jsonify({
+            "success": False,
+            "message": "This component is out of stock."
+        }), 400
+
+    virtual_build = make_virtual_build(
+        [item.product for item in build.items] + [product]
+    )
+    compatibility = check_build_compatibility(virtual_build)
+    product_category = product.category.name
+    issues = [
+        result["message"]
+        for result in compatibility["results"]
+        if result["compatible"] is False
+        and product_category in result.get("pair", ())
+    ]
+    if issues:
+        return jsonify({
+            "success": False,
+            "message": "This component is incompatible with the current build.",
+            "issues": issues
         }), 400
 
     new_item = BuildItem(
@@ -470,7 +527,7 @@ def add_component_api(build_id, product_id):
 @login_required
 def remove_component_api(build_id, item_id):
 
-    build = Build.query.get_or_404(build_id)
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
         return jsonify({
@@ -478,7 +535,7 @@ def remove_component_api(build_id, item_id):
             "message": "Build not found."
         }), 404
 
-    item = BuildItem.query.get_or_404(item_id)
+    item = db.get_or_404(BuildItem, item_id)
 
     if item.build_id != build.id:
         return jsonify({
@@ -503,7 +560,7 @@ def remove_component_api(build_id, item_id):
 @login_required
 def swap_component_options_api(build_id, item_id):
 
-    build = Build.query.get_or_404(build_id)
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
         return jsonify({
@@ -511,7 +568,7 @@ def swap_component_options_api(build_id, item_id):
             "message": "Build not found."
         }), 404
 
-    item = BuildItem.query.get_or_404(item_id)
+    item = db.get_or_404(BuildItem, item_id)
 
     if item.build_id != build.id:
         return jsonify({
@@ -548,7 +605,7 @@ def swap_component_options_api(build_id, item_id):
 @login_required
 def apply_swap_api(build_id, item_id, product_id):
 
-    build = Build.query.get_or_404(build_id)
+    build = db.get_or_404(Build, build_id)
 
     if build.user_id != current_user.id:
         return jsonify({
@@ -556,7 +613,7 @@ def apply_swap_api(build_id, item_id, product_id):
             "message": "Build not found."
         }), 404
 
-    item = BuildItem.query.get_or_404(item_id)
+    item = db.get_or_404(BuildItem, item_id)
 
     if item.build_id != build.id:
         return jsonify({
@@ -564,7 +621,7 @@ def apply_swap_api(build_id, item_id, product_id):
             "message": "Component not found."
         }), 404
 
-    new_product = Product.query.get_or_404(product_id)
+    new_product = db.get_or_404(Product, product_id)
 
     if new_product.category_id != item.product.category_id:
         return jsonify({
@@ -590,7 +647,24 @@ def apply_swap_api(build_id, item_id, product_id):
 
     old_name = item.product.name
 
-    item.product_id = new_product.id
+    old_product = item.product
+    category = old_product.category.name
+    item.product = new_product
+
+    compatibility = check_build_compatibility(build)
+    issues = [
+        result["message"]
+        for result in compatibility["results"]
+        if result["compatible"] is False
+        and category in result.get("pair", ())
+    ]
+    if issues:
+        item.product = old_product
+        return jsonify({
+            "success": False,
+            "message": "The replacement would make this build incompatible.",
+            "issues": issues
+        }), 400
 
     db.session.commit()
 
@@ -603,12 +677,14 @@ def apply_swap_api(build_id, item_id, product_id):
 @api.route("/recommendation", methods=["POST"])
 def recommendation_api():
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = {}
 
     usage = data.get("usage")
     budget = data.get("budget")
 
-    if not usage:
+    if not isinstance(usage, str) or not usage.strip():
         return jsonify({
             "success": False,
             "message": "Usage is required."
@@ -622,8 +698,93 @@ def recommendation_api():
             "message": "Budget must be a valid number."
         }), 400
 
+    if not math.isfinite(budget):
+        return jsonify({
+            "success": False,
+            "message": "Budget must be a finite positive number."
+        }), 400
+
     result = recommend_components(usage, budget)
+
+    if not result.get("success"):
+        return jsonify(result), 422
 
     return jsonify(
         make_json_safe(result)
     )
+
+
+@api.route("/recommendation/build", methods=["POST"])
+@login_required
+def create_recommended_build_api():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = {}
+
+    usage = data.get("usage")
+    if not isinstance(usage, str) or not usage.strip():
+        return jsonify({
+            "success": False,
+            "message": "Usage is required."
+        }), 400
+
+    try:
+        budget = float(data.get("budget"))
+    except (TypeError, ValueError):
+        return jsonify({
+            "success": False,
+            "message": "Budget must be a valid number."
+        }), 400
+
+    if not math.isfinite(budget) or budget <= 0:
+        return jsonify({
+            "success": False,
+            "message": "Budget must be a finite positive number."
+        }), 400
+
+    result = recommend_components(usage, budget)
+    if not result.get("success"):
+        return jsonify(result), 422
+
+    products = result["recommendations"]
+    missing_categories = sorted(
+        set(USAGE_PROFILES[result["usage"]]) - products.keys()
+    )
+    if missing_categories:
+        return jsonify({
+            "success": False,
+            "message": (
+                "The recommendation is incomplete. Missing: "
+                + ", ".join(missing_categories)
+            )
+        }), 422
+
+    total_price = sum(product.price for product in products.values())
+    if total_price > budget:
+        return jsonify({
+            "success": False,
+            "message": "The recommendation exceeds the requested budget."
+        }), 422
+
+    build = Build(
+        name=f"{result['usage'].title()} PC - Recommended",
+        user_id=current_user.id
+    )
+    db.session.add(build)
+    db.session.flush()
+
+    for product in products.values():
+        db.session.add(
+            BuildItem(build_id=build.id, product_id=product.id)
+        )
+
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": "Build created successfully.",
+        "build": {
+            "id": build.id,
+            "name": build.name
+        }
+    }), 201

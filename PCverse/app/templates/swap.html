@@ -53,6 +53,7 @@
 
                 <form method="POST"
                       action="{{ url_for('main.apply_swap', build_id=build.id, item_id=item.id, product_id=option.product.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="view-btn">
                         {% if option.compatible and option.power_ok %}Use this{% else %}Use anyway{% endif %}
                     </button>

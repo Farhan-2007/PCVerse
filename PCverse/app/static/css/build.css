@@ -285,6 +285,15 @@
     color: #dc2626;
 }
 
+.compatibility-box.compatibility-unknown {
+    border-color: #f59e0b;
+    background: #fffbeb;
+}
+
+.compatibility-box.compatibility-unknown .compatibility-header h3 {
+    color: #b45309;
+}
+
 .compatibility-details {
     margin-top: 20px;
     padding-top: 18px;
@@ -323,6 +332,11 @@
 .result-incompatible {
     background: #fff1f2;
     border: 1px solid #fecdd3;
+}
+
+.result-unknown {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
 }
 
 
@@ -749,6 +763,10 @@
     border-left: 5px solid #dc3545;
 }
 
+.compatibility-box.compatibility-unknown {
+    border-left: 5px solid #f59e0b;
+}
+
 .compatibility-header {
     display: flex;
     align-items: flex-start;
@@ -800,6 +818,10 @@
 
 .result-incompatible {
     background: #fff3f3;
+}
+
+.result-unknown {
+    background: #fffbeb;
 }
 
 .compatibility-result:last-child {

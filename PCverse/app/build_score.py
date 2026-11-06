@@ -20,9 +20,9 @@ def calculate_build_score(
 
     # 2. CPU/GPU Balance — 30 points
     performance_result = check_cpu_gpu_performance(
-    recommendations.get("CPU"),
-    recommendations.get("GPU")
-)
+        recommendations.get("CPU"),
+        recommendations.get("GPU")
+    )
 
     if performance_result["status"] == "balanced":
         performance_score = 30
@@ -32,7 +32,7 @@ def calculate_build_score(
     ]:
         performance_score = 20
     else:
-        performance_score = 10
+        performance_score = 0
 
     score += performance_score
     breakdown["CPU/GPU Balance"] = performance_score
@@ -59,17 +59,6 @@ def calculate_build_score(
         "CPU Cooler",
         "Cabinet"
     ]
-
-    required_categories = [
-    "CPU",
-    "GPU",
-    "Motherboard",
-    "RAM",
-    "SSD",
-    "Power Supply",
-    "CPU Cooler",
-    "Cabinet"
-]
 
     if all(
         recommendations.get(category)

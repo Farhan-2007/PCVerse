@@ -1,56 +1,121 @@
 const API_BASE_URL = "http://localhost:5000/api"
 
+let csrfToken = null
+let csrfTokenRequest = null
 
-export async function getProducts() {
-    const response = await fetch(`${API_BASE_URL}/products`)
+function createRequestError(message, status) {
+    const error = new Error(message)
+    error.status = status
+    return error
+}
 
-    if (!response.ok) {
-        throw new Error("Failed to fetch products")
+async function getCsrfToken() {
+    if (csrfToken) {
+        return csrfToken
     }
 
-    return response.json()
+    if (!csrfTokenRequest) {
+        csrfTokenRequest = (async () => {
+            const response = await fetch(`${API_BASE_URL}/csrf-token`, {
+                credentials: "include"
+            })
+            const data = await response.json()
+
+            if (!response.ok || !data || !data.csrf_token) {
+                throw createRequestError(
+                    data?.message || "Unable to initialize request security.",
+                    response.status
+                )
+            }
+
+            csrfToken = data.csrf_token
+            return csrfToken
+        })()
+    }
+
+    try {
+        return await csrfTokenRequest
+    } finally {
+        csrfTokenRequest = null
+    }
+}
+
+async function request(path, options = {}, retryCsrf = true) {
+    const method = options.method || "GET"
+    const headers = { ...options.headers }
+
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+        headers["X-CSRF-Token"] = await getCsrfToken()
+    }
+
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        method,
+        headers,
+        credentials: "include"
+    })
+
+    let data
+    try {
+        data = await response.json()
+    } catch {
+        throw createRequestError(
+            response.status === 401
+                ? "Your session has expired. Please log in again."
+                : "The server returned an invalid response.",
+            response.status
+        )
+    }
+
+    if (
+        response.status === 400 &&
+        retryCsrf &&
+        ["POST", "PUT", "PATCH", "DELETE"].includes(method) &&
+        data?.message === "The request security token is missing or invalid."
+    ) {
+        csrfToken = null
+        return request(path, options, false)
+    }
+
+    if (response.status === 401) {
+        throw createRequestError(
+            data?.message || "Your session has expired. Please log in again.",
+            response.status
+        )
+    }
+
+    if (!response.ok) {
+        throw createRequestError(
+            data?.message || "The request could not be completed.",
+            response.status
+        )
+    }
+
+    return data
+}
+
+
+export async function getProducts() {
+    return request("/products")
 }
 
 export async function getProduct(productId) {
-    const response = await fetch(
-        `${API_BASE_URL}/products/${productId}`
-    )
-
-    if (!response.ok) {
-        throw new Error("Failed to fetch product")
-    }
-
-    return response.json()
+    return request(`/products/${productId}`)
 }
 
 
 export async function getCategories() {
-    const response = await fetch(`${API_BASE_URL}/categories`)
-
-    if (!response.ok) {
-        throw new Error("Failed to fetch categories")
-    }
-
-    return response.json()
+    return request("/categories")
 }
 
 export async function getCurrentUser() {
-    const response = await fetch(`${API_BASE_URL}/me`, {
-        credentials: "include"
-    })
-
-    if (!response.ok) {
-        throw new Error("Failed to fetch current user")
-    }
-
-    return response.json()
+    return request("/me")
 }
 
 export async function login(email, password) {
 
-    const response = await fetch(`${API_BASE_URL}/login`, {
+    return request("/login", {
         method: "POST",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
@@ -59,21 +124,12 @@ export async function login(email, password) {
             password
         })
     })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-        throw new Error(data.message || "Login failed")
-    }
-
-    return data
 }
 
 export async function signup(username, email, password) {
 
-    const response = await fetch(`${API_BASE_URL}/signup`, {
+    return request("/signup", {
         method: "POST",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
@@ -83,198 +139,85 @@ export async function signup(username, email, password) {
             password
         })
     })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-        throw new Error(data.message || "Signup failed")
-    }
-
-    return data
 }
 
 export async function logout() {
 
-    const response = await fetch(`${API_BASE_URL}/logout`, {
+    return request("/logout", {
         method: "POST",
-        credentials: "include"
     })
-
-    if (!response.ok) {
-        throw new Error("Logout failed")
-    }
-
-    return response.json()
 }
 
 export async function getBuilds() {
 
-    const response = await fetch(`${API_BASE_URL}/builds`, {
-        credentials: "include"
-    })
-
-    if (!response.ok) {
-        throw new Error("Failed to fetch builds")
-    }
-
-    return response.json()
+    return request("/builds")
 }
 
 export async function getBuild(buildId) {
-    const response = await fetch(
-        `${API_BASE_URL}/builds/${buildId}`,
-        {
-            credentials: "include"
-        }
-    )
-
-    if (!response.ok) {
-        throw new Error("Failed to fetch build")
-    }
-
-    return response.json()
+    return request(`/builds/${buildId}`)
 }
 
 export async function createBuild(name) {
-    const response = await fetch(`${API_BASE_URL}/builds`, {
+    return request("/builds", {
         method: "POST",
-        credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({ name })
     })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-        throw new Error(data.message || "Failed to create build")
-    }
-
-    return data
 }
 
 
 export async function deleteBuild(buildId) {
-    const response = await fetch(
-        `${API_BASE_URL}/builds/${buildId}`,
-        {
-            method: "DELETE",
-            credentials: "include"
-        }
-    )
-
-    const data = await response.json()
-
-    if (!response.ok) {
-        throw new Error(data.message || "Failed to delete build")
-    }
-
-    return data
+    return request(`/builds/${buildId}`, { method: "DELETE" })
 }
 
 
 export async function addComponent(buildId, productId) {
-    const response = await fetch(
-        `${API_BASE_URL}/builds/${buildId}/items/${productId}`,
-        {
-            method: "POST",
-            credentials: "include"
-        }
+    return request(
+        `/builds/${buildId}/items/${productId}`,
+        { method: "POST" }
     )
-
-    const data = await response.json()
-
-    if (!response.ok) {
-        throw new Error(data.message || "Failed to add component")
-    }
-
-    return data
 }
 
 
 export async function removeComponent(buildId, itemId) {
-    const response = await fetch(
-        `${API_BASE_URL}/builds/${buildId}/items/${itemId}`,
-        {
-            method: "DELETE",
-            credentials: "include"
-        }
+    return request(
+        `/builds/${buildId}/items/${itemId}`,
+        { method: "DELETE" }
     )
-
-    const data = await response.json()
-
-    if (!response.ok) {
-        throw new Error(data.message || "Failed to remove component")
-    }
-
-    return data
 }
 
 export async function getSwapOptions(buildId, itemId) {
-    const response = await fetch(
-        `${API_BASE_URL}/builds/${buildId}/items/${itemId}/swap-options`,
-        {
-            credentials: "include"
-        }
+    return request(
+        `/builds/${buildId}/items/${itemId}/swap-options`
     )
-
-    const data = await response.json()
-
-    if (!response.ok) {
-        throw new Error(
-            data.message || "Failed to fetch swap options"
-        )
-    }
-
-    return data
 }
 
 export async function applySwap(buildId, itemId, productId) {
 
-    const response = await fetch(
-        `${API_BASE_URL}/builds/${buildId}/items/${itemId}/swap/${productId}`,
-        {
-            method: "POST",
-            credentials: "include"
-        }
+    return request(
+        `/builds/${buildId}/items/${itemId}/swap/${productId}`,
+        { method: "POST" }
     )
-
-    const data = await response.json()
-
-    if (!response.ok) {
-        throw new Error(
-            data.message || "Failed to swap component"
-        )
-    }
-
-    return data
 }
 
 export async function getRecommendations(usage, budget) {
-    const response = await fetch(
-        `${API_BASE_URL}/recommendation`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify({
-                usage,
-                budget
-            })
-        }
-    )
-
-    const data = await response.json()
-
-    if (!response.ok) {
-        throw new Error(
-            data.message || "Failed to get recommendations"
-        )
-    }
-
-    return data
+    return request("/recommendation", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ usage, budget })
+    })
 }
 
+export async function createBuildFromRecommendations(usage, budget) {
+    return request("/recommendation/build", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ usage, budget })
+    })
+}

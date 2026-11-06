@@ -28,13 +28,19 @@ function Hero() {
 
                     <div className="hero-actions">
 
-                        <button className="hero-button hero-button-primary">
+                        <a
+                            href="/create-build"
+                            className="hero-button hero-button-primary"
+                        >
                             Build My PC
-                        </button>
+                        </a>
 
-                        <button className="hero-button hero-button-secondary">
+                        <a
+                            href="/products"
+                            className="hero-button hero-button-secondary"
+                        >
                             Explore Components
-                        </button>
+                        </a>
 
                     </div>
 

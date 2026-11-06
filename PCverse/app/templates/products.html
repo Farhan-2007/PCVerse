@@ -6,6 +6,15 @@
 
     <h2 class="section-title">Component Categories</h2>
 
+    <form action="{{ url_for('main.products') }}" method="GET" class="product-search">
+        {% if build_id %}
+        <input type="hidden" name="build_id" value="{{ build_id }}">
+        {% endif %}
+        <label for="product-search">Search by name or brand</label>
+        <input id="product-search" type="search" name="search" value="{{ search }}" placeholder="Search components...">
+        <button type="submit">Search</button>
+    </form>
+
     <div class="category-list">
 
         {% for category in categories %}
@@ -44,10 +53,13 @@
 
                 <a href="{{ url_for('main.product', product_id=product.id, build_id = build_id) }}" class="view-btn"> View Details </a>
 
-                {% if build_id %}
-
-                <a href="{{ url_for('main.add_to_build', build_id = build_id, product_id = product.id) }}" class="add-btn"> ➕ Add to Build </a>
-
+                {% if build_id and product.stock > 0 %}
+                <form method="POST" action="{{ url_for('main.add_to_build', build_id=build_id, product_id=product.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="add-btn">➕ Add to Build</button>
+                </form>
+                {% elif build_id %}
+                <span class="out-stock">Out of Stock</span>
                 {% endif %}
 
             </div>

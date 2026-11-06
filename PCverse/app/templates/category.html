@@ -20,7 +20,7 @@
                 <h3>{{ product.name }}</h3>
 
                 <p class="brand">
-                    <strong>Brand:</strong> {{ product.author }}
+                    <strong>Brand:</strong> {{ product.brand }}
                 </p>
 
                 <p class="price">
@@ -41,7 +41,7 @@
 
                 {% endif %}
 
-                <a href="{{ url_for('main.product', product_id=product.id) }}"
+                <a href="{{ url_for('main.product', product_id=product.id, build_id=build_id) }}"
                    class="view-btn">
 
                     View Details

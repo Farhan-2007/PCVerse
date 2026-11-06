@@ -1,4 +1,23 @@
+import re
+
 from app.specification_parser import parse_specification
+from app.power_calculator import calculate_build_power
+
+
+def _unknown(message):
+    return {
+        "compatible": None,
+        "status": "unknown",
+        "message": message
+    }
+
+
+def _result(compatible, message):
+    return {
+        "compatible": compatible,
+        "status": "compatible" if compatible else "incompatible",
+        "message": message
+    }
 
 
 # =========================================================
@@ -15,28 +34,25 @@ def check_cpu_motherboard(cpu, motherboard):
 
     if not cpu_socket or not motherboard_socket:
 
-        return {
-            "compatible": False,
-            "message": "CPU or motherboard socket specification is missing."
-        }
+        return _unknown("CPU or motherboard socket specification is missing.")
 
-    if cpu_socket == motherboard_socket:
+    if cpu_socket.strip().casefold() == motherboard_socket.strip().casefold():
 
-        return {
-            "compatible": True,
-            "message": (
+        return _result(
+            True,
+            (
                 f"{cpu.name} and {motherboard.name} are compatible. "
                 f"Both use {cpu_socket}."
             )
-        }
+        )
 
-    return {
-        "compatible": False,
-        "message": (
+    return _result(
+        False,
+        (
             f"{cpu.name} uses {cpu_socket}, "
             f"but {motherboard.name} uses {motherboard_socket}."
         )
-    }
+    )
 
 
 # =========================================================
@@ -53,28 +69,25 @@ def check_motherboard_ram(motherboard, ram):
 
     if not motherboard_ram_type or not ram_type:
 
-        return {
-            "compatible": False,
-            "message": "Motherboard or RAM type specification is missing."
-        }
+        return _unknown("Motherboard or RAM type specification is missing.")
 
-    if motherboard_ram_type == ram_type:
+    if motherboard_ram_type.strip().casefold() == ram_type.strip().casefold():
 
-        return {
-            "compatible": True,
-            "message": (
+        return _result(
+            True,
+            (
                 f"Motherboard and RAM are compatible. "
                 f"Both use {ram_type}."
             )
-        }
+        )
 
-    return {
-        "compatible": False,
-        "message": (
+    return _result(
+        False,
+        (
             f"Motherboard supports {motherboard_ram_type}, "
             f"but the selected RAM is {ram_type}."
         )
-    }
+    )
 
 
 # =========================================================
@@ -91,40 +104,40 @@ def check_cpu_cooler(cpu, cooler):
 
     if not cpu_socket or not cooler_sockets:
 
-        return {
-            "compatible": False,
-            "message": "CPU or cooler socket specification is missing."
-        }
+        return _unknown("CPU or cooler socket specification is missing.")
 
     supported_sockets = [
         socket.strip()
         for socket in cooler_sockets.split(",")
     ]
 
-    if cpu_socket in supported_sockets:
+    if any(
+        cpu_socket.strip().casefold() == socket.casefold()
+        for socket in supported_sockets
+    ):
 
-        return {
-            "compatible": True,
-            "message": (
+        return _result(
+            True,
+            (
                 f"{cpu.name} and {cooler.name} are compatible. "
                 f"The cooler supports {cpu_socket}."
             )
-        }
+        )
 
-    return {
-        "compatible": False,
-        "message": (
+    return _result(
+        False,
+        (
             f"{cooler.name} does not support the CPU socket "
             f"{cpu_socket}."
         )
-    }
+    )
 
 
 # =========================================================
 # GPU ↔ PSU
 # =========================================================
 
-def check_gpu_psu(gpu, psu):
+def check_gpu_psu(gpu, psu, required_wattage=None):
 
     gpu_specs = parse_specification(gpu.specification)
     psu_specs = parse_specification(psu.specification)
@@ -134,50 +147,36 @@ def check_gpu_psu(gpu, psu):
 
     if not gpu_power or not psu_wattage:
 
-        return {
-            "compatible": False,
-            "message": "GPU or PSU wattage specification is missing."
-        }
+        return _unknown("GPU or PSU wattage specification is missing.")
 
-    try:
+    gpu_match = re.search(r"\d+(?:\.\d+)?", gpu_power)
+    psu_match = re.search(r"\d+(?:\.\d+)?", psu_wattage)
+    if not gpu_match or not psu_match:
+        return _unknown("Invalid GPU or PSU power specification.")
 
-        gpu_power = int(
-            gpu_power.replace("W", "").strip()
-        )
-
-        psu_wattage = int(
-            psu_wattage.replace("W", "").strip()
-        )
-
-    except ValueError:
-
-        return {
-            "compatible": False,
-            "message": "Invalid GPU or PSU power specification."
-        }
-
-    # Extra power headroom
-    required_power = gpu_power + 150
+    gpu_power = int(float(gpu_match.group()))
+    psu_wattage = int(float(psu_match.group()))
+    required_power = required_wattage or gpu_power + 150
 
     if psu_wattage >= required_power:
 
-        return {
-            "compatible": True,
-            "message": (
+        return _result(
+            True,
+            (
                 f"{gpu.name} and {psu.name} have sufficient power. "
-                f"GPU consumption: {gpu_power}W, "
+                f"Estimated system requirement: {required_power}W, "
                 f"PSU: {psu_wattage}W."
             )
-        }
-
-    return {
-        "compatible": False,
-        "message": (
-            f"{gpu.name} requires approximately {required_power}W "
-            f"including headroom, but the selected PSU provides "
-            f"only {psu_wattage}W."
         )
-    }
+
+    return _result(
+        False,
+        (
+            f"The build requires approximately {required_power}W "
+            f"including headroom, but {psu.name} provides only "
+            f"{psu_wattage}W."
+        )
+    )
 
 
 # =========================================================
@@ -194,55 +193,44 @@ def check_gpu_motherboard(gpu, motherboard):
 
     if not gpu_interface or not motherboard_pcie:
 
-        return {
-            "compatible": False,
-            "message": (
+        return _unknown(
+            (
                 "GPU or motherboard PCIe specification is missing."
             )
-        }
+        )
 
     # Extract PCIe generation numbers
-    try:
-
-        gpu_version = float(
-            gpu_interface.replace("PCIe", "").strip()
-        )
-
-        motherboard_version = float(
-            motherboard_pcie.replace("PCIe", "").strip()
-        )
-
-    except ValueError:
-
-        return {
-            "compatible": False,
-            "message": "Invalid PCIe specification."
-        }
+    gpu_match = re.search(
+        r"PCIe\s*([0-9]+(?:\.[0-9]+)?)",
+        gpu_interface,
+        re.IGNORECASE
+    )
+    motherboard_match = re.search(
+        r"PCIe\s*([0-9]+(?:\.[0-9]+)?)",
+        motherboard_pcie,
+        re.IGNORECASE
+    )
+    if not gpu_match or not motherboard_match:
+        return _unknown("Invalid PCIe specification.")
+    gpu_version = float(gpu_match.group(1))
+    motherboard_version = float(motherboard_match.group(1))
 
     # PCIe is backward compatible.
     # A newer GPU can work with an older motherboard slot.
-    if gpu_version >= motherboard_version:
-
-        return {
-            "compatible": True,
-            "message": (
-                f"{gpu.name} is compatible with "
-                f"{motherboard.name}. "
-                f"GPU: {gpu_interface}, "
-                f"Motherboard: {motherboard_pcie}."
-            )
-        }
-
-    return {
-        "compatible": True,
-        "message": (
+    return _result(
+        True,
+        (
             f"{gpu.name} is compatible with "
             f"{motherboard.name}. "
             f"GPU: {gpu_interface}, "
             f"Motherboard: {motherboard_pcie}. "
-            f"The GPU will operate at the motherboard's PCIe generation."
+            + (
+                "The GPU will operate at the motherboard's PCIe generation."
+                if gpu_version > motherboard_version
+                else "PCIe interface generations are compatible."
+            )
         )
-    }
+    )
 
 
 # =========================================================
@@ -259,50 +247,39 @@ def check_gpu_cabinet(gpu, cabinet):
 
     if not gpu_length or not gpu_clearance:
 
-        return {
-            "compatible": False,
-            "message": (
+        return _unknown(
+            (
                 "GPU length or cabinet GPU clearance "
                 "specification is missing."
             )
-        }
-
-    try:
-
-        gpu_length = float(
-            gpu_length.replace("mm", "").strip()
         )
 
-        gpu_clearance = float(
-            gpu_clearance.replace("mm", "").strip()
-        )
-
-    except ValueError:
-
-        return {
-            "compatible": False,
-            "message": "Invalid GPU length or cabinet clearance specification."
-        }
+    gpu_match = re.search(r"\d+(?:\.\d+)?", gpu_length)
+    clearance_match = re.search(r"\d+(?:\.\d+)?", gpu_clearance)
+    if not gpu_match or not clearance_match:
+        return _unknown("Invalid GPU length or cabinet clearance specification.")
+    gpu_length = float(gpu_match.group())
+    gpu_clearance = float(clearance_match.group())
 
     if gpu_length <= gpu_clearance:
 
-        return {
-            "compatible": True,
-            "message": (
+        return _result(
+            True,
+            (
                 f"{gpu.name} fits inside {cabinet.name}. "
                 f"GPU length: {gpu_length} mm, "
                 f"available clearance: {gpu_clearance} mm."
             )
-        }
+        )
 
-    return {
-        "compatible": False,
-        "message": (
+    return _result(
+        False,
+        (
             f"{gpu.name} is too long for {cabinet.name}. "
             f"GPU length: {gpu_length} mm, "
             f"available clearance: {gpu_clearance} mm."
         )
-    }
+    )
 
 def _tag(result, pair):
     """Attach the pair of categories a result refers to (used by swap)."""
@@ -358,7 +335,10 @@ def check_build_compatibility(build):
     if cpu and motherboard:
 
         results.append(
-            check_cpu_motherboard(cpu, motherboard)
+            _tag(
+                check_cpu_motherboard(cpu, motherboard),
+                ("CPU", "Motherboard")
+            )
         )
 
 
@@ -366,7 +346,10 @@ def check_build_compatibility(build):
     if motherboard and ram:
 
         results.append(
-            check_motherboard_ram(motherboard, ram)
+            _tag(
+                check_motherboard_ram(motherboard, ram),
+                ("Motherboard", "RAM")
+            )
         )
 
 
@@ -374,15 +357,26 @@ def check_build_compatibility(build):
     if cpu and cooler:
 
         results.append(
-            check_cpu_cooler(cpu, cooler)
+            _tag(
+                check_cpu_cooler(cpu, cooler),
+                ("CPU", "CPU Cooler")
+            )
         )
 
 
     # GPU ↔ PSU
     if gpu and psu:
 
+        power = calculate_build_power(build)
         results.append(
-            check_gpu_psu(gpu, psu)
+            _tag(
+                check_gpu_psu(
+                    gpu,
+                    psu,
+                    power["recommended_psu"]
+                ),
+                ("GPU", "Power Supply")
+            )
         )
 
 
@@ -390,7 +384,10 @@ def check_build_compatibility(build):
     if gpu and motherboard:
 
         results.append(
-            check_gpu_motherboard(gpu, motherboard)
+            _tag(
+                check_gpu_motherboard(gpu, motherboard),
+                ("GPU", "Motherboard")
+            )
         )
 
 
@@ -398,7 +395,10 @@ def check_build_compatibility(build):
     if gpu and cabinet:
 
         results.append(
-            check_gpu_cabinet(gpu, cabinet)
+            _tag(
+                check_gpu_cabinet(gpu, cabinet),
+                ("GPU", "Cabinet")
+            )
         )
 
 
@@ -406,26 +406,43 @@ def check_build_compatibility(build):
     if not results:
 
         return {
-            "compatible": True,
+            "compatible": None,
+            "status": "unknown",
             "message": "Add more components to check compatibility.",
             "results": []
         }
 
-
-    # Check all results
-    all_compatible = all(
-        result["compatible"]
+    has_incompatibility = any(
+        result["compatible"] is False
         for result in results
     )
+    has_unknown = any(
+        result["compatible"] is None
+        for result in results
+    )
+    all_compatible = not has_incompatibility and not has_unknown
 
 
     return {
-        "compatible": all_compatible,
+        "compatible": (
+            False if has_incompatibility
+            else None if has_unknown
+            else True
+        ),
+        "status": (
+            "incompatible" if has_incompatibility
+            else "unknown" if has_unknown
+            else "compatible"
+        ),
 
         "message": (
             "All checked components are compatible."
             if all_compatible
-            else "One or more compatibility issues were detected."
+            else (
+                "One or more compatibility issues were detected."
+                if has_incompatibility
+                else "No incompatibilities were found, but some checks could not be verified."
+            )
         ),
 
         "results": results

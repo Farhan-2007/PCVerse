@@ -44,13 +44,14 @@
 
             {% if build_id %}
 
-            <a href="{{ url_for('main.add_to_build',
-                    build_id=build_id,
-                    product_id=product.id) }}" class="cart-btn">
-
-                ➕ Add to My Build
-
-            </a>
+            {% if product.stock > 0 %}
+            <form method="POST" action="{{ url_for('main.add_to_build', build_id=build_id, product_id=product.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="cart-btn">➕ Add to My Build</button>
+            </form>
+            {% else %}
+            <span class="out-stock">Out of Stock</span>
+            {% endif %}
 
             {% else %}
 
@@ -62,9 +63,9 @@
 
             {% endif %}
 
-            <a href="#" class="wishlist-btn">
-                ❤️ Wishlist
-            </a>
+            <button type="button" class="wishlist-btn" disabled title="Wishlist is not available yet">
+                Wishlist (coming soon)
+            </button>
 
         </div>
 

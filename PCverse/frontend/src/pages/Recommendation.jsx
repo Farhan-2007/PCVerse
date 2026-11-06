@@ -1,5 +1,8 @@
 import { useState } from "react"
-import { getRecommendations, createBuild, addComponent } from "../services/api"
+import {
+    getRecommendations,
+    createBuildFromRecommendations
+} from "../services/api"
 
 function Recommendation() {
 
@@ -57,23 +60,12 @@ function Recommendation() {
             setCreatingBuild(true)
             setCreateBuildError("")
 
-            const buildData = await createBuild(
-                `${result.usage} PC - Recommended`
+            const buildData = await createBuildFromRecommendations(
+                result.usage,
+                Number(result.budget)
             )
 
             const buildId = buildData.build.id
-
-            const products = Object.values(
-                result.recommendations || {}
-            )
-
-            for (const product of products) {
-                await addComponent(
-                    buildId,
-                    product.id
-                )
-            }
-
             window.location.href = `/build/${buildId}`
 
         } catch (error) {
@@ -97,7 +89,7 @@ function Recommendation() {
             <div className="mb-10 text-center">
 
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">
-                    PCVerse AI Builder
+                    PCVerse Rule-Based Builder
                 </p>
 
                 <h1 className="mt-4 text-4xl font-bold tracking-tight text-zinc-100 md:text-5xl">
@@ -248,8 +240,8 @@ function Recommendation() {
 
                                 <p className="mt-2 max-w-2xl text-zinc-400">
                                     PCVerse selected these components based
-                                    on your usage, budget, and component
-                                    compatibility.
+                                    on your usage, budget, and the available
+                                    component specifications.
                                 </p>
 
                             </div>
@@ -322,6 +314,35 @@ function Recommendation() {
                         </div>
 
                     </div>
+
+                    {result.compatibility && (
+                        <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+                            <h3 className="text-lg font-semibold text-zinc-100">
+                                Rule-Based Compatibility Check
+                            </h3>
+                            <p className="mt-2 text-sm text-zinc-400">
+                                {result.compatibility.message}
+                            </p>
+                            {result.compatibility.results?.length > 0 && (
+                                <ul className="mt-4 space-y-2">
+                                    {result.compatibility.results.map((check, index) => (
+                                        <li
+                                            key={`${check.pair?.join("-") ?? "check"}-${index}`}
+                                            className={`rounded-lg px-3 py-2 text-sm ${
+                                                check.compatible === false
+                                                    ? "bg-red-500/10 text-red-300"
+                                                    : check.compatible === null
+                                                        ? "bg-amber-500/10 text-amber-200"
+                                                        : "bg-emerald-500/10 text-emerald-200"
+                                            }`}
+                                        >
+                                            {check.message}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    )}
 
                     {/* Create Build */}
                     <div className="mt-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">

@@ -1,4 +1,17 @@
+import re
+
 from app.specification_parser import parse_specification
+
+
+def _watts(value):
+    if not value:
+        return 0
+
+    match = re.search(r"\d+(?:\.\d+)?", str(value))
+    if not match:
+        return 0
+
+    return max(0, int(float(match.group())))
 
 
 def get_power(product):
@@ -16,9 +29,7 @@ def get_power(product):
     if not power:
         return 0
 
-    return int(
-        power.replace("W", "").strip()
-    )
+    return _watts(power)
 
 
 def calculate_build_power(build):
@@ -55,13 +66,7 @@ def calculate_build_power(build):
             selected_psu.specification
         )
 
-        wattage = specs.get("Wattage")
-
-        if wattage:
-
-            psu_wattage = int(
-                wattage.replace("W", "").strip()
-            )
+        psu_wattage = _watts(specs.get("Wattage"))
 
     if selected_psu:
 

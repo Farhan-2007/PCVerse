@@ -1,20 +1,26 @@
 import { useEffect, useState } from "react"
-import { getProduct, addComponent } from "../services/api"
+import { getProduct } from "../services/api"
 
 
-function ProductDetails({ productId, onBack }) {
+function ProductDetails({
+    productId,
+    onBack,
+    buildId: selectedBuildId,
+    isAdded = false,
+    isAdding = false,
+    membershipLoading = false,
+    membershipError = "",
+    actionError = "",
+    actionMessage = "",
+    onAddToBuild
+}) {
 
     const [product, setProduct] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
 
-    const [adding, setAdding] = useState(false)
-    const [actionMessage, setActionMessage] = useState("")
-    const [actionError, setActionError] = useState("")
-
-    const buildId = new URLSearchParams(
-        window.location.search
-    ).get("build_id")
+    const buildId = selectedBuildId ??
+        new URLSearchParams(window.location.search).get("build_id")
 
 
     useEffect(() => {
@@ -34,32 +40,11 @@ function ProductDetails({ productId, onBack }) {
 
 
     async function handleAddToBuild() {
-
-        if (!buildId) {
+        if (!buildId || isAdded || isAdding || membershipLoading || membershipError) {
             return
         }
 
-        try {
-
-            setAdding(true)
-            setActionMessage("")
-            setActionError("")
-
-            await addComponent(buildId, product.id)
-
-            setActionMessage(
-                `${product.name} was added to your build.`
-            )
-
-        } catch (error) {
-
-            setActionError(error.message)
-
-        } finally {
-
-            setAdding(false)
-
-        }
+        await onAddToBuild?.(product.id)
     }
 
 
@@ -227,16 +212,38 @@ function ProductDetails({ productId, onBack }) {
                             <button
                                 onClick={handleAddToBuild}
                                 disabled={
-                                    adding ||
+                                    isAdding ||
+                                    isAdded ||
+                                    membershipLoading ||
+                                    Boolean(membershipError) ||
                                     product.stock <= 0
+                                }
+                                aria-label={
+                                    isAdded
+                                        ? `${product.name} added to build`
+                                        : `Add ${product.name} to build`
                                 }
                                 className="mt-4 w-full rounded-xl bg-emerald-500 px-5 py-3.5 font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                {adding
+                                {product.stock <= 0
+                                    ? "Out of stock"
+                                    : isAdding
                                     ? "Adding..."
-                                    : "＋ Add to Build"
+                                    : isAdded
+                                        ? "✓ Added"
+                                        : membershipLoading
+                                            ? "Checking..."
+                                            : membershipError
+                                                ? "Build unavailable"
+                                                : "Add to Build"
                                 }
                             </button>
+
+                            {membershipError && (
+                                <p className="mt-3 text-sm text-red-400" role="alert">
+                                    Unable to verify the selected build: {membershipError}
+                                </p>
+                            )}
 
                         </div>
 
@@ -250,8 +257,17 @@ function ProductDetails({ productId, onBack }) {
                         <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
 
                             <p className="text-sm text-emerald-400">
-                                ✓ {actionMessage}
+                                {actionMessage}
                             </p>
+
+                            {buildId && (
+                                <a
+                                    href={`/build/${buildId}`}
+                                    className="mt-3 inline-block text-sm font-semibold text-emerald-300 underline underline-offset-4"
+                                >
+                                    View updated build
+                                </a>
+                            )}
 
                         </div>
 

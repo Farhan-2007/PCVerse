@@ -9,10 +9,11 @@
         <h2>Create Your PCVerse Account 🖥️</h2>
 
         <p class="auth-subtitle">
-            Join PCVerse to build your dream PC, save your favorite components, and receive AI-powered recommendations.
+            Join PCVerse to build your dream PC, save components, and get rule-based recommendations.
         </p>
 
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="form-group">
 
